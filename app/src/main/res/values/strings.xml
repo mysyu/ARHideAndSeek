@@ -1,3 +1,16 @@
 <resources>
     <string name="app_name">ARHideAndSeek</string>
+    <string-array name="time_select">
+        <item>5分鐘</item>
+        <item>10分鐘</item>
+        <item>15分鐘</item>
+    </string-array>
+    <string-array name="mode_select">
+        <item>一般</item>
+        <item>CardBoard</item>
+    </string-array>
+    <string-array name="treasure_select">
+        <item>5個</item>
+        <item>10個</item>
+    </string-array>
 </resources>
