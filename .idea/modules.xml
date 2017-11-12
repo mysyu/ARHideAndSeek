@@ -3,7 +3,9 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/ARHideAndSeek.iml" filepath="$PROJECT_DIR$/ARHideAndSeek.iml" />
+      <module fileurl="file://C:\Users\Andrew Li\StudioProjects\ARHideAndSeek\ARHideAndSeek.iml" filepath="C:\Users\Andrew Li\StudioProjects\ARHideAndSeek\ARHideAndSeek.iml" />
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
+      <module fileurl="file://C:\Users\Andrew Li\StudioProjects\ARHideAndSeek\app\app.iml" filepath="C:\Users\Andrew Li\StudioProjects\ARHideAndSeek\app\app.iml" />
     </modules>
   </component>
 </project>
