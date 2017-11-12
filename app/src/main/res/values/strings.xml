@@ -13,4 +13,8 @@
         <item>5個</item>
         <item>10個</item>
     </string-array>
+    <string-array name="empty">
+        <item>空</item>
+    </string-array>
+
 </resources>

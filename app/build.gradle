@@ -4,7 +4,7 @@ android {
     compileSdkVersion 25
     defaultConfig {
         applicationId "tw.edu.yzu.cse.arhideandseek"
-        minSdkVersion 25
+        minSdkVersion 21
         targetSdkVersion 25
         versionCode 1
         versionName "1.0"
@@ -26,4 +26,7 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.1'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.1'
+    implementation files('libs/mysql-connector-java-commercial-5.1.42-bin.jar')
+    implementation files('libs/Java-WebSocket-1.3.6.jar')
+    implementation files('libs/ksoap2-android-assembly-2.4-jar-with-dependencies.jar')
 }
