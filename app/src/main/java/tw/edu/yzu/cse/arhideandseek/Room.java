@@ -1,5 +1,6 @@
 package tw.edu.yzu.cse.arhideandseek;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -35,6 +36,17 @@ public class Room extends AppCompatActivity {
                 Room.this.finish();
             }
         });
+        Button start = (Button) findViewById(R.id.start);
+        if (!Game.isHost) {
+            start.setVisibility(View.GONE);
+        } else {
+            start.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Game.client.Send(Game.roomID + "START");
+                }
+            });
+        }
     }
 
     private void initTeam() {
@@ -56,6 +68,12 @@ public class Room extends AppCompatActivity {
             switch (msg.what) {
                 case 0:
                     initTeam();
+                    break;
+                case 1:
+                    Intent intent = new Intent();
+                    intent.setClass(Room.this, Game.class);
+                    startActivity(intent);
+                    Room.this.finish();
                     break;
             }
         }

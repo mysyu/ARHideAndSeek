@@ -96,6 +96,9 @@ public class Client extends WebSocketClient {
                 Game.status = Integer.parseInt(ss[5].replaceFirst("Status:", ""));
                 handler.sendEmptyMessage(0);
                 Log.e("client", s);
+            } else if (s.equals("START")) {
+                Game.status = 1;
+                handler.sendEmptyMessage(1);
             } else if (s.equals("EXIT")) {
                 Game.client.Close();
                 handler.sendEmptyMessage(-1);
