@@ -14,7 +14,7 @@ import android.widget.Toast;
 import java.sql.ResultSet;
 
 public class GameFind extends AppCompatActivity {
-    EditText roomID = null;
+    private EditText roomID = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,6 +66,7 @@ public class GameFind extends AppCompatActivity {
         public void handleMessage(Message msg) {
             switch (msg.what) {
                 case 0:
+                    Game.client.handler = null;
                     Intent intent = new Intent();
                     intent.setClass(GameFind.this, Room.class);
                     startActivity(intent);

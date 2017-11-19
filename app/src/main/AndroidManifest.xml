@@ -43,5 +43,9 @@
             android:name=".Game"
             android:theme="@style/FullScreen"
             android:screenOrientation="landscape"></activity>
+        <activity
+            android:name=".Stat"
+            android:screenOrientation="portrait"></activity>
+
     </application>
 </manifest>

@@ -4,17 +4,35 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <SurfaceView
+        android:id="@+id/camera"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
     <ImageView
         android:id="@+id/capture"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:visibility="gone"
-        app:srcCompat="@android:color/transparent"
-        android:contentDescription="TODO" />
+        app:srcCompat="@android:color/black" />
 
-    <SurfaceView
-        android:id="@+id/camera"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+    <ImageView
+        android:id="@+id/Img_check"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="34dp"
+        app:srcCompat="@mipmap/check" />
+
+    <ImageView
+        android:id="@+id/Img_treasure"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="34dp"
+        android:scaleType="fitXY"
+        app:srcCompat="@mipmap/treasure" />
 
 </RelativeLayout>

@@ -64,6 +64,7 @@ public class GameCreate extends AppCompatActivity {
         public void handleMessage(Message msg) {
             switch (msg.what) {
                 case 0:
+                    Game.client.handler = null;
                     Intent intent = new Intent();
                     intent.setClass(GameCreate.this, Room.class);
                     startActivity(intent);

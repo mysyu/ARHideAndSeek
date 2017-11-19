@@ -9,8 +9,7 @@ import android.widget.Button;
 import android.widget.EditText;
 
 public class Menu extends AppCompatActivity {
-    EditText name = null;
-    public static String nickName = null;
+    private EditText name = null;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

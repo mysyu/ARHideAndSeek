@@ -68,13 +68,13 @@
         android:text="寶藏"
         android:textAppearance="@android:style/TextAppearance.Large"
         android:textSize="36sp"
-        app:layout_constraintEnd_toStartOf="@+id/treasure"
+        app:layout_constraintEnd_toStartOf="@+id/Img_treasure"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView2" />
 
 
     <Spinner
-        android:id="@+id/treasure"
+        android:id="@+id/Img_treasure"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginEnd="64dp"

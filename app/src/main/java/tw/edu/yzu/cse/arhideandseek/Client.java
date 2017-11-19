@@ -1,6 +1,8 @@
 package tw.edu.yzu.cse.arhideandseek;
 
+import android.os.Bundle;
 import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
 
 import org.java_websocket.client.WebSocketClient;
@@ -81,6 +83,7 @@ public class Client extends WebSocketClient {
 
     @Override
     public void onMessage(String s) {
+        while (handler == null) ;
         if (s.startsWith(Game.roomID)) {
             s = s.replaceFirst(Game.roomID, "");
             Log.e("client", s);
@@ -98,7 +101,20 @@ public class Client extends WebSocketClient {
                 Log.e("client", s);
             } else if (s.equals("START")) {
                 Game.status = 1;
-                handler.sendEmptyMessage(1);
+                handler.sendEmptyMessage(2);
+            } else if (s.startsWith("PLAY:")) {
+                Game.status = 2;
+                s = s.replaceFirst("PLAY:", "");
+                Bundle bundle = new Bundle();
+                bundle.putString("PLAY", s);
+                Message message = new Message();
+                message.what = 4;
+                message.setData(bundle);
+                handler.sendMessage(message);
+                Log.e("client", s);
+            } else if (s.equals("FINISH")) {
+                Game.status = 3;
+                handler.sendEmptyMessage(5);
             } else if (s.equals("EXIT")) {
                 Game.client.Close();
                 handler.sendEmptyMessage(-1);

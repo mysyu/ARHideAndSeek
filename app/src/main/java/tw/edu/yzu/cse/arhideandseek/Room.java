@@ -26,7 +26,7 @@ public class Room extends AppCompatActivity {
         LayoutInflater inflater = getLayoutInflater();
         teamA.addHeaderView((ViewGroup) inflater.inflate(R.layout.teama, teamA, false));
         teamB.addHeaderView((ViewGroup) inflater.inflate(R.layout.teamb, teamB, false));
-        ((TextView) findViewById(R.id.room)).setText("Room " + Game.roomID);
+        ((TextView) findViewById(R.id.stat)).setText("Room " + Game.roomID);
         initTeam();
         Game.client.handler = handler;
         ((Button) findViewById(R.id.exit)).setOnClickListener(new View.OnClickListener() {
@@ -69,7 +69,8 @@ public class Room extends AppCompatActivity {
                 case 0:
                     initTeam();
                     break;
-                case 1:
+                case 2:
+                    Game.client.handler = null;
                     Intent intent = new Intent();
                     intent.setClass(Room.this, Game.class);
                     startActivity(intent);
