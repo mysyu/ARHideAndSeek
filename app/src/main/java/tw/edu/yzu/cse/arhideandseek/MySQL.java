@@ -6,7 +6,6 @@ import android.net.NetworkInfo;
 
 import org.ksoap2.SoapEnvelope;
 import org.ksoap2.serialization.SoapObject;
-import org.ksoap2.serialization.SoapPrimitive;
 import org.ksoap2.serialization.SoapSerializationEnvelope;
 import org.ksoap2.transport.HttpTransportSE;
 
@@ -121,7 +120,7 @@ public class MySQL {
                 envelope.setOutputSoapObject(request);
                 HttpTransportSE androidHttpTransport = new HttpTransportSE("http://mysyu.ddns.net/WebService.asmx");
                 androidHttpTransport.call("http://tempuri.org/IP", envelope);
-                IP = ((SoapPrimitive) envelope.getResponse()).toString();
+                IP = envelope.getResponse().toString();
             }
         } catch (Exception e) {
             ex = e;

@@ -7,7 +7,6 @@ import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -21,7 +20,7 @@ public class GameFind extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.game_find);
         roomID = (EditText) findViewById(R.id.roomID);
-        ((Button) findViewById(R.id.join)).setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.join).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Log.e("find", "player");

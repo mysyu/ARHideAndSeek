@@ -5,7 +5,6 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
 
 public class Menu extends AppCompatActivity {
@@ -16,7 +15,7 @@ public class Menu extends AppCompatActivity {
         setContentView(R.layout.menu);
         MySQL.context = this;
         name = (EditText) findViewById(R.id.name);
-        ((Button) findViewById(R.id.host)).setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.host).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Log.e("menu", "host");
@@ -27,7 +26,7 @@ public class Menu extends AppCompatActivity {
                 }
             }
         });
-        ((Button) findViewById(R.id.player)).setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.player).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Log.e("menu", "player");

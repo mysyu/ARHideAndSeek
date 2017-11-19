@@ -30,14 +30,14 @@ public class Stat extends AppCompatActivity {
                 setImage();
             }
         });
-        ((Button) findViewById(R.id.last)).setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.last).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 current = (current - 1 + Game.hide.length) % Game.hide.length;
                 setImage();
             }
         });
-        ((Button) findViewById(R.id.next)).setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.next).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 current = (current + 1 + Game.hide.length) % Game.hide.length;

@@ -7,7 +7,6 @@ import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ListView;
@@ -24,12 +23,12 @@ public class Room extends AppCompatActivity {
         teamA = (ListView) findViewById(R.id.teamA);
         teamB = (ListView) findViewById(R.id.teamB);
         LayoutInflater inflater = getLayoutInflater();
-        teamA.addHeaderView((ViewGroup) inflater.inflate(R.layout.teama, teamA, false));
-        teamB.addHeaderView((ViewGroup) inflater.inflate(R.layout.teamb, teamB, false));
+        teamA.addHeaderView(inflater.inflate(R.layout.teama, teamA, false));
+        teamB.addHeaderView(inflater.inflate(R.layout.teamb, teamB, false));
         ((TextView) findViewById(R.id.stat)).setText("Room " + Game.roomID);
         initTeam();
         Game.client.handler = handler;
-        ((Button) findViewById(R.id.exit)).setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.exit).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Game.client.Close();
