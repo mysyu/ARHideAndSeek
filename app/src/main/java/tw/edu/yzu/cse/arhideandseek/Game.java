@@ -67,6 +67,7 @@ public class Game extends AppCompatActivity {
     private Handler childHandler, mainHandler;
     private String cameraID;
     private ImageReader imageReader;
+    private ImageReader previewReader;
     private CameraCaptureSession cameraCaptureSession;
     private CameraDevice cameraDevice;
     private int width;
@@ -173,15 +174,15 @@ public class Game extends AppCompatActivity {
         childHandler = new Handler(handlerThread.getLooper());
         mainHandler = new Handler(getMainLooper());
         cameraID = "" + CameraCharacteristics.LENS_FACING_FRONT;
-        imageReader = ImageReader.newInstance(width, height, ImageFormat.JPEG, 1);
+        imageReader = ImageReader.newInstance(width, height, ImageFormat.JPEG, 2);
         imageReader.setOnImageAvailableListener(new ImageReader.OnImageAvailableListener() {
             @Override
             public void onImageAvailable(ImageReader reader) {
-                imageReader.setOnImageAvailableListener(null, null);
                 Image image = reader.acquireNextImage();
                 ByteBuffer buffer = image.getPlanes()[0].getBuffer();
                 byte[] bytes = new byte[buffer.remaining()];
                 buffer.get(bytes);
+                image.close();
                 Bitmap bitmap, b = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
                 if (b != null) {
                     if (isHost) {
@@ -264,7 +265,20 @@ public class Game extends AppCompatActivity {
         try {
             previewRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
             previewRequestBuilder.addTarget(surfaceHolder.getSurface());
-            cameraDevice.createCaptureSession(Arrays.asList(surfaceHolder.getSurface(), imageReader.getSurface()), new CameraCaptureSession.StateCallback() {
+            previewReader =
+                    ImageReader.newInstance(width, height, ImageFormat.JPEG, 2);
+
+            previewReader.setOnImageAvailableListener(new ImageReader.OnImageAvailableListener() {
+                @Override
+                public void onImageAvailable(ImageReader reader) {
+                    Image image = reader.acquireNextImage();
+                    Log.e("preview", image.getWidth() + " * " + image.getHeight());
+                    image.close();
+                }
+            }, childHandler);
+            previewRequestBuilder.addTarget(previewReader.getSurface());
+
+            cameraDevice.createCaptureSession(Arrays.asList(surfaceHolder.getSurface(), previewReader.getSurface(), imageReader.getSurface()), new CameraCaptureSession.StateCallback() {
                 @Override
                 public void onConfigured(CameraCaptureSession cameraCaptureSession) {
                     if (cameraDevice == null) return;
@@ -334,8 +348,6 @@ public class Game extends AppCompatActivity {
                             imageView.setVisibility(View.GONE);
                             Toast.makeText(Game.this, "Fail! Please hide again! " + treasure + " treasure left!", Toast.LENGTH_SHORT).show();
                         }
-                        cameraDevice.close();
-                        initCamera2();
                     }
                     break;
                 case 4:
