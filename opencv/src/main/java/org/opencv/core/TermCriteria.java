@@ -1,6 +1,57 @@
 package org.opencv.core;
 
-//javadoc:TermCriteria
+/**
+ * <p>class CV_EXPORTS TermCriteria <code></p>
+ * <p>
+ * <p>// C++ code:</p>
+ * <p>
+ * <p>
+ * <p>public:</p>
+ * <p>
+ * <p>enum</p>
+ * <p>
+ * <p>
+ * <p>COUNT=1, //!< the maximum number of iterations or elements to compute</p>
+ * <p>
+ * <p>MAX_ITER=COUNT, //!< ditto</p>
+ * <p>
+ * <p>EPS=2 //!< the desired accuracy or change in parameters at which the
+ * iterative algorithm stops</p>
+ * <p>
+ * <p>};</p>
+ * <p>
+ * <p>//! default constructor</p>
+ * <p>
+ * <p>TermCriteria();</p>
+ * <p>
+ * <p>//! full constructor</p>
+ * <p>
+ * <p>TermCriteria(int type, int maxCount, double epsilon);</p>
+ * <p>
+ * <p>//! conversion from CvTermCriteria</p>
+ * <p>
+ * <p>TermCriteria(const CvTermCriteria& criteria);</p>
+ * <p>
+ * <p>//! conversion to CvTermCriteria</p>
+ * <p>
+ * <p>operator CvTermCriteria() const;</p>
+ * <p>
+ * <p>int type; //!< the type of termination criteria: COUNT, EPS or COUNT + EPS</p>
+ * <p>
+ * <p>int maxCount; // the maximum number of iterations/elements</p>
+ * <p>
+ * <p>double epsilon; // the desired accuracy</p>
+ * <p>
+ * <p>};</p>
+ * <p>
+ * <p>The class defining termination criteria for iterative algorithms. You can
+ * initialize it by default constructor and then override any parameters, or the
+ * structure may be fully initialized using the advanced variant of the
+ * constructor.
+ * </code></p>
+ *
+ * @see <a href="http://docs.opencv.org/modules/core/doc/basic_structures.html#termcriteria">org.opencv.core.TermCriteria</a>
+ */
 public class TermCriteria {
 
     /**
@@ -23,9 +74,12 @@ public class TermCriteria {
     /**
      * Termination criteria for iterative algorithms.
      *
-     * @param type     the type of termination criteria: COUNT, EPS or COUNT + EPS.
-     * @param maxCount the maximum number of iterations/elements.
-     * @param epsilon  the desired accuracy.
+     * @param type
+     *            the type of termination criteria: COUNT, EPS or COUNT + EPS.
+     * @param maxCount
+     *            the maximum number of iterations/elements.
+     * @param epsilon
+     *            the desired accuracy.
      */
     public TermCriteria(int type, int maxCount, double epsilon) {
         this.type = type;
@@ -48,7 +102,7 @@ public class TermCriteria {
         if (vals != null) {
             type = vals.length > 0 ? (int) vals[0] : 0;
             maxCount = vals.length > 1 ? (int) vals[1] : 0;
-            epsilon = vals.length > 2 ? vals[2] : 0;
+            epsilon = vals.length > 2 ? (double) vals[2] : 0;
         } else {
             type = 0;
             maxCount = 0;

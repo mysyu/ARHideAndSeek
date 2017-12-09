@@ -1,5 +1,7 @@
 package org.opencv.core;
 
+import org.opencv.features2d.KeyPoint;
+
 import java.util.Arrays;
 import java.util.List;
 

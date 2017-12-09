@@ -7,9 +7,9 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.ImageFormat;
 import android.graphics.Paint;
+import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
@@ -58,7 +58,7 @@ public class Game extends AppCompatActivity {
 
 
     private ImageView Img_treasure;
-    private ImageView Img_check;
+    private ImageView Img_hide;
     private SurfaceView surfaceView;
     private SurfaceHolder surfaceHolder;
     private ImageView imageView;
@@ -72,6 +72,8 @@ public class Game extends AppCompatActivity {
     private CameraDevice cameraDevice;
     private int width;
     private int height;
+    private float initTreasureX;
+    private float initTreasureY;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -91,20 +93,13 @@ public class Game extends AppCompatActivity {
         surfaceView = (SurfaceView) findViewById(R.id.camera);
         surfaceView.bringToFront();
         imageView = (ImageView) findViewById(R.id.capture);
+        Img_hide = (ImageView) findViewById(R.id.Img_hide);
+        Img_hide.bringToFront();
         imageView.bringToFront();
-        Img_check = (ImageView) findViewById(R.id.Img_check);
-        Img_check.bringToFront();
         Img_treasure = (ImageView) findViewById(R.id.Img_treasure);
         Img_treasure.bringToFront();
         if (isHost) {
             imageView.setVisibility(View.GONE);
-            Img_check.setVisibility(View.VISIBLE);
-            Img_check.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    takePicture();
-                }
-            });
             Img_treasure.setVisibility(View.VISIBLE);
             Img_treasure.setOnTouchListener(new View.OnTouchListener() {
                 float x, y, mx, my;
@@ -117,12 +112,30 @@ public class Game extends AppCompatActivity {
                             my -= event.getRawY();
                             Img_treasure.setX(x - mx);
                             Img_treasure.setY(y - my);
-                        case MotionEvent.ACTION_DOWN:
                             x = Img_treasure.getX();
                             y = Img_treasure.getY();
                             mx = event.getRawX();
                             my = event.getRawY();
                             Img_treasure.bringToFront();
+                            break;
+                        case MotionEvent.ACTION_DOWN:
+                            initTreasureX = Img_treasure.getX();
+                            initTreasureY = Img_treasure.getY();
+                            x = Img_treasure.getX();
+                            y = Img_treasure.getY();
+                            mx = event.getRawX();
+                            my = event.getRawY();
+                            Img_treasure.bringToFront();
+                            break;
+                        case MotionEvent.ACTION_UP:
+                            if (new Rect((int) Img_hide.getX(), (int) Img_hide.getY(), (int) Img_hide.getX() + Img_hide.getWidth(), (int) Img_hide.getY() + Img_hide.getHeight()).contains((int) Img_treasure.getX(), (int) Img_treasure.getY(), (int) Img_treasure.getX() + Img_treasure.getWidth(), (int) Img_treasure.getY() + Img_treasure.getHeight())) {
+                                takePicture();
+                            } else {
+                                Img_treasure.setVisibility(View.VISIBLE);
+                                imageView.setVisibility(View.GONE);
+                                Img_treasure.setX(initTreasureX);
+                                Img_treasure.setY(initTreasureY);
+                            }
                             break;
                     }
                     return true;
@@ -131,7 +144,6 @@ public class Game extends AppCompatActivity {
             initView();
         } else {
             imageView.setVisibility(View.VISIBLE);
-            Img_check.setVisibility(View.GONE);
             Img_treasure.setVisibility(View.GONE);
         }
     }
@@ -186,22 +198,14 @@ public class Game extends AppCompatActivity {
                 Bitmap bitmap, b = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
                 if (b != null) {
                     if (isHost) {
-                        b = Bitmap.createScaledBitmap(b, width, height, false);
-                        bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_4444);
+                        b = Bitmap.createScaledBitmap(b, width, height, true);
+                        bitmap = Bitmap.createBitmap(b, (int) Img_hide.getX(), (int) Img_hide.getY(), Img_hide.getWidth(), Img_hide.getHeight());
+                        b = bitmap.copy(Bitmap.Config.ARGB_8888, true);
                         Canvas canvas = new Canvas(bitmap);
                         Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-                        canvas.drawBitmap(b, 0, 0, null);
-                        canvas.drawBitmap(((BitmapDrawable) Img_treasure.getDrawable()).getBitmap(), Img_treasure.getX(), Img_treasure.getY(), null);
-                        paint.setColor(Color.argb(200, 255, 255, 255));
-                        canvas.drawRect(0, 0, 1000, 300, paint);
-                        paint.setColor(Color.BLACK);
-                        paint.setTextSize(50);
-                        canvas.drawText("Hide: " + (Game.hide.length - treasure + 1), 50, 100, paint);
-                        canvas.drawText("Team: Host", 50, 175, paint);
-                        canvas.drawText("Name: " + name, 50, 250, paint);
+                        canvas.drawBitmap(((BitmapDrawable) Img_treasure.getDrawable()).getBitmap(), Img_hide.getWidth() / 2 - Img_treasure.getWidth() / 2, Img_hide.getHeight() / 2 - Img_treasure.getHeight() / 2, null);
                         Game.hide[Game.hide.length - treasure] = bitmap;
                         Game.init_hide[Game.hide.length - treasure] = b;
-                        Img_check.setVisibility(View.GONE);
                         Img_treasure.setVisibility(View.GONE);
                         imageView.setImageBitmap(bitmap);
                         imageView.setVisibility(View.VISIBLE);
@@ -272,7 +276,7 @@ public class Game extends AppCompatActivity {
                 @Override
                 public void onImageAvailable(ImageReader reader) {
                     Image image = reader.acquireNextImage();
-                    Log.e("preview", image.getWidth() + " * " + image.getHeight());
+                    //Log.e("preview", image.getWidth() + " * " + image.getHeight());
                     image.close();
                 }
             }, childHandler);
@@ -331,11 +335,10 @@ public class Game extends AppCompatActivity {
                             treasure--;
                             Toast.makeText(Game.this, "Success! " + treasure + " treasure left!", Toast.LENGTH_SHORT).show();
                             if (treasure > 0) {
-                                Img_check.setVisibility(View.VISIBLE);
                                 Img_treasure.setVisibility(View.VISIBLE);
                                 imageView.setVisibility(View.GONE);
-                                Img_treasure.setX(Img_check.getX());
-                                Img_treasure.setY(Img_check.getY());
+                                Img_treasure.setX(initTreasureX);
+                                Img_treasure.setY(initTreasureY);
                             } else if (treasure == 0) {
                                 for (int i = 0; i < hide.length; i++) {
                                     Log.e("game", "Hide" + i + ": " + hide[i].getWidth() + " * " + hide[i].getHeight());
@@ -343,7 +346,6 @@ public class Game extends AppCompatActivity {
                                 Game.client.Send(Game.roomID + "PLAY");
                             }
                         } else {
-                            Img_check.setVisibility(View.VISIBLE);
                             Img_treasure.setVisibility(View.VISIBLE);
                             imageView.setVisibility(View.GONE);
                             Toast.makeText(Game.this, "Fail! Please hide again! " + treasure + " treasure left!", Toast.LENGTH_SHORT).show();

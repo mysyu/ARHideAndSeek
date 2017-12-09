@@ -40,7 +40,7 @@ public abstract class BaseLoaderCallback implements LoaderCallbackInterface {
             break;
             /** Package installation has been canceled. **/
             case LoaderCallbackInterface.INSTALL_CANCELED: {
-                Log.d(TAG, "OpenCV library installation was canceled by user");
+                Log.d(TAG, "OpenCV library instalation was canceled by user");
                 finish();
             }
             break;

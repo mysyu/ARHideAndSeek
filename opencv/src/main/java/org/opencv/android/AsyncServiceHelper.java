@@ -67,7 +67,6 @@ class AsyncServiceHelper {
                 public String getPackageName() {
                     return "OpenCV Manager";
                 }
-
                 public void install() {
                     Log.d(TAG, "Trying to install OpenCV Manager via Google Play");
 
@@ -113,7 +112,7 @@ class AsyncServiceHelper {
                 }
 
                 public void cancel() {
-                    Log.d(TAG, "Waiting for OpenCV canceled by user");
+                    Log.d(TAG, "Wating for OpenCV canceled by user");
                     mServiceInstallationProgress = false;
                     int Status = LoaderCallbackInterface.INSTALL_CANCELED;
                     Log.d(TAG, "Init finished with status " + Status);
@@ -131,7 +130,7 @@ class AsyncServiceHelper {
     }
 
     /**
-     * URL of OpenCV Manager page on Google Play Market.
+     *  URL of OpenCV Manager page on Google Play Market.
      */
     protected static final String OPEN_CV_SERVICE_URL = "market://details?id=org.opencv.engine";
 
@@ -162,13 +161,12 @@ class AsyncServiceHelper {
                                 public String getPackageName() {
                                     return "OpenCV library";
                                 }
-
                                 public void install() {
                                     Log.d(TAG, "Trying to install OpenCV lib via Google Play");
                                     try {
                                         if (mEngineService.installVersion(mOpenCVersion)) {
                                             mLibraryInstallationProgress = true;
-                                            Log.d(TAG, "Package installation started");
+                                            Log.d(TAG, "Package installation statred");
                                             Log.d(TAG, "Unbind from service");
                                             mAppContext.unbindService(mServiceConnection);
                                         } else {
@@ -181,6 +179,7 @@ class AsyncServiceHelper {
                                         }
                                     } catch (RemoteException e) {
                                         e.printStackTrace();
+                                        ;
                                         Log.d(TAG, "Init finished with status " + LoaderCallbackInterface.INIT_FAILED);
                                         Log.d(TAG, "Unbind from service");
                                         mAppContext.unbindService(mServiceConnection);
@@ -188,7 +187,6 @@ class AsyncServiceHelper {
                                         mUserAppCallback.onManagerConnected(LoaderCallbackInterface.INIT_FAILED);
                                     }
                                 }
-
                                 public void cancel() {
                                     Log.d(TAG, "OpenCV library installation was canceled");
                                     Log.d(TAG, "Init finished with status " + LoaderCallbackInterface.INSTALL_CANCELED);
@@ -197,9 +195,8 @@ class AsyncServiceHelper {
                                     Log.d(TAG, "Calling using callback");
                                     mUserAppCallback.onManagerConnected(LoaderCallbackInterface.INSTALL_CANCELED);
                                 }
-
                                 public void wait_install() {
-                                    Log.e(TAG, "Installation was not started! Nothing to wait!");
+                                    Log.e(TAG, "Instalation was not started! Nothing to wait!");
                                 }
                             };
 
@@ -223,7 +220,6 @@ class AsyncServiceHelper {
                                     Log.d(TAG, "Calling using callback");
                                     mUserAppCallback.onManagerConnected(LoaderCallbackInterface.INSTALL_CANCELED);
                                 }
-
                                 public void wait_install() {
                                     Log.d(TAG, "Waiting for current installation");
                                     try {
@@ -323,7 +319,7 @@ class AsyncServiceHelper {
                 }
             } else {
                 // If the dependencies list is not defined or empty.
-                String AbsLibraryPath = Path + File.separator + "libopencv_java3.so";
+                String AbsLibraryPath = Path + File.separator + "libopencv_java.so";
                 result &= loadLibrary(AbsLibraryPath);
             }
 

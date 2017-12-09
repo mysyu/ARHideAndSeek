@@ -1,11 +1,14 @@
 package org.opencv.android;
 
 import android.content.Context;
+import android.util.Log;
 
 /**
  * Helper class provides common initialization methods for OpenCV library.
  */
 public class OpenCVLoader {
+    private static final String TAG = "OpenCVLoader";
+
     /**
      * OpenCV Library version 2.4.2.
      */
@@ -67,34 +70,7 @@ public class OpenCVLoader {
     public static final String OPENCV_VERSION_2_4_13 = "2.4.13";
 
     /**
-     * OpenCV Library version 3.0.0.
-     */
-    public static final String OPENCV_VERSION_3_0_0 = "3.0.0";
-
-    /**
-     * OpenCV Library version 3.1.0.
-     */
-    public static final String OPENCV_VERSION_3_1_0 = "3.1.0";
-
-    /**
-     * OpenCV Library version 3.2.0.
-     */
-    public static final String OPENCV_VERSION_3_2_0 = "3.2.0";
-
-    /**
-     * OpenCV Library version 3.3.0.
-     */
-    public static final String OPENCV_VERSION_3_3_0 = "3.3.0";
-
-    /**
-     * Current OpenCV Library version
-     */
-    public static final String OPENCV_VERSION = "3.3.1";
-
-
-    /**
      * Loads and initializes OpenCV library from current application package. Roughly, it's an analog of system.loadLibrary("opencv_java").
-     *
      * @return Returns true is initialization of OpenCV was successful.
      */
     public static boolean initDebug() {
@@ -103,7 +79,6 @@ public class OpenCVLoader {
 
     /**
      * Loads and initializes OpenCV library from current application package. Roughly, it's an analog of system.loadLibrary("opencv_java").
-     *
      * @param InitCuda load and initialize CUDA runtime libraries.
      * @return Returns true is initialization of OpenCV was successful.
      */
@@ -113,14 +88,18 @@ public class OpenCVLoader {
 
     /**
      * Loads and initializes OpenCV library using OpenCV Engine service.
-     *
-     * @param Version    OpenCV library version.
+     * @param Version OpenCV library version.
      * @param AppContext application context for connecting to the service.
-     * @param Callback   object, that implements LoaderCallbackInterface for handling the connection status.
+     * @param Callback object, that implements LoaderCallbackInterface for handling the connection status.
      * @return Returns true if initialization of OpenCV is successful.
      */
     public static boolean initAsync(String Version, Context AppContext,
                                     LoaderCallbackInterface Callback) {
+        if (initDebug()) {
+            Callback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
+            return true;
+        }
+        Log.w(TAG, "OpenCV binaries are not packaged with application. Trying to use OpenCV Manager...");
         return AsyncServiceHelper.initOpenCV(Version, AppContext, Callback);
     }
 }
