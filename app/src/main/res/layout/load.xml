@@ -5,9 +5,11 @@
     android:layout_height="match_parent">
 
     <ImageView
-        android:id="@+id/capture"
+        android:id="@+id/imageView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:srcCompat="@mipmap/ic_launcher_round" />
-
+        android:layout_alignParentStart="true"
+        android:background="@color/colorPrimaryDark"
+        android:contentDescription="loading"
+        app:srcCompat="@drawable/loadpage" />
 </RelativeLayout>
