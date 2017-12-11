@@ -8,7 +8,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.ImageFormat;
-import android.graphics.Paint;
 import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
 import android.hardware.camera2.CameraAccessException;
@@ -53,12 +52,10 @@ public class Game extends AppCompatActivity {
     public static Integer status = null;
     public static Bitmap[] hide = null;
     public static Bitmap[] seek = null;
-    public static Bitmap[] init_hide = null;
-    public static Bitmap[] init_seek = null;
-
+    public Detector detector = null;
 
     private ImageView Img_treasure;
-    private ImageView Img_hide;
+    private ImageView Img_detect;
     private SurfaceView surfaceView;
     private SurfaceHolder surfaceHolder;
     private ImageView imageView;
@@ -67,11 +64,11 @@ public class Game extends AppCompatActivity {
     private Handler childHandler, mainHandler;
     private String cameraID;
     private ImageReader imageReader;
-    private ImageReader previewReader;
     private CameraCaptureSession cameraCaptureSession;
     private CameraDevice cameraDevice;
     private int width;
     private int height;
+    private Rect detect = null;
     private float initTreasureX;
     private float initTreasureY;
 
@@ -82,19 +79,15 @@ public class Game extends AppCompatActivity {
         Game.client.handler = handler;
         hide = new Bitmap[Game.treasure];
         seek = new Bitmap[Game.treasure];
-        init_hide = new Bitmap[Game.treasure];
-        init_seek = new Bitmap[Game.treasure];
         for (int i = 0; i < Game.treasure; i++) {
             hide[i] = null;
             seek[i] = null;
-            init_hide[i] = null;
-            init_seek[i] = null;
         }
         surfaceView = (SurfaceView) findViewById(R.id.camera);
         surfaceView.bringToFront();
         imageView = (ImageView) findViewById(R.id.capture);
-        Img_hide = (ImageView) findViewById(R.id.Img_hide);
-        Img_hide.bringToFront();
+        Img_detect = (ImageView) findViewById(R.id.Img_detect);
+        Img_detect.bringToFront();
         imageView.bringToFront();
         Img_treasure = (ImageView) findViewById(R.id.Img_treasure);
         Img_treasure.bringToFront();
@@ -128,11 +121,13 @@ public class Game extends AppCompatActivity {
                             Img_treasure.bringToFront();
                             break;
                         case MotionEvent.ACTION_UP:
-                            if (new Rect((int) Img_hide.getX(), (int) Img_hide.getY(), (int) Img_hide.getX() + Img_hide.getWidth(), (int) Img_hide.getY() + Img_hide.getHeight()).contains((int) Img_treasure.getX(), (int) Img_treasure.getY(), (int) Img_treasure.getX() + Img_treasure.getWidth(), (int) Img_treasure.getY() + Img_treasure.getHeight())) {
+                            if (detect.contains((int) Img_treasure.getX(), (int) Img_treasure.getY(), (int) Img_treasure.getX() + Img_treasure.getWidth(), (int) Img_treasure.getY() + Img_treasure.getHeight())) {
+                                Img_treasure.setX(initTreasureX);
+                                Img_treasure.setY(initTreasureY);
+                                Img_treasure.setVisibility(View.GONE);
                                 takePicture();
                             } else {
                                 Img_treasure.setVisibility(View.VISIBLE);
-                                imageView.setVisibility(View.GONE);
                                 Img_treasure.setX(initTreasureX);
                                 Img_treasure.setY(initTreasureY);
                             }
@@ -164,6 +159,10 @@ public class Game extends AppCompatActivity {
                 Log.e("game", width + " * " + height);
                 Game.this.width = width;
                 Game.this.height = height;
+                if (detect == null) {
+                    detect = new Rect((int) Img_detect.getX(), (int) Img_detect.getY(), (int) Img_detect.getX() + Img_detect.getWidth(), (int) Img_detect.getY() + Img_detect.getHeight());
+                    detector = new Detector(Game.treasure, width, height, detect, handler);
+                }
                 initCamera2();
             }
 
@@ -191,33 +190,49 @@ public class Game extends AppCompatActivity {
             @Override
             public void onImageAvailable(ImageReader reader) {
                 Image image = reader.acquireNextImage();
-                ByteBuffer buffer = image.getPlanes()[0].getBuffer();
+                final ByteBuffer buffer = image.getPlanes()[0].getBuffer();
                 byte[] bytes = new byte[buffer.remaining()];
                 buffer.get(bytes);
                 image.close();
-                Bitmap bitmap, b = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+                Bitmap b = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
                 if (b != null) {
+                    Log.e("game", "take picture");
+                    b = Bitmap.createScaledBitmap(b, width, height, true);
                     if (isHost) {
-                        b = Bitmap.createScaledBitmap(b, width, height, true);
-                        bitmap = Bitmap.createBitmap(b, (int) Img_hide.getX(), (int) Img_hide.getY(), Img_hide.getWidth(), Img_hide.getHeight());
-                        b = bitmap.copy(Bitmap.Config.ARGB_8888, true);
-                        Canvas canvas = new Canvas(bitmap);
-                        Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-                        canvas.drawBitmap(((BitmapDrawable) Img_treasure.getDrawable()).getBitmap(), Img_hide.getWidth() / 2 - Img_treasure.getWidth() / 2, Img_hide.getHeight() / 2 - Img_treasure.getHeight() / 2, null);
-                        Game.hide[Game.hide.length - treasure] = bitmap;
-                        Game.init_hide[Game.hide.length - treasure] = b;
-                        Img_treasure.setVisibility(View.GONE);
-                        imageView.setImageBitmap(bitmap);
+                        b = Bitmap.createBitmap(b, detect.left, detect.top, detect.width(), detect.height());
+                        final Bitmap bitmap = b.copy(Bitmap.Config.ARGB_8888, true);
+                        Canvas canvas = new Canvas(b);
+                        canvas.drawBitmap(((BitmapDrawable) Img_treasure.getDrawable()).getBitmap(), b.getWidth() / 2 - Img_treasure.getWidth() / 2, b.getHeight() / 2 - Img_treasure.getHeight() / 2, null);
+                        final int now = Game.hide.length - treasure;
+                        Game.hide[now] = b;
+                        imageView.setImageBitmap(b);
                         imageView.setVisibility(View.VISIBLE);
                         new Thread(new Runnable() {
                             @Override
                             public void run() {
+                                int size = bitmap.getRowBytes() * bitmap.getHeight();
+                                ByteBuffer byteBuffer = ByteBuffer.allocate(size);
+                                bitmap.copyPixelsToBuffer(byteBuffer);
                                 try {
-                                    Thread.sleep(2000);
-                                } catch (InterruptedException e) {
-                                    Log.e("game", Log.getStackTraceString(e));
+                                    MySQL.Excute("INSERT INTO capture VALUES(?,'HIDE',?,?,?,?)", new Object[]{Game.roomID, now, bitmap.getWidth(), bitmap.getHeight(), byteBuffer.array()});
+                                } catch (Exception e) {
+                                    Log.e("err", Log.getStackTraceString(e));
                                 }
+                                detector.setHide(now, bitmap);
                                 handler.sendEmptyMessage(3);
+                            }
+                        }).start();
+                    } else {
+                        final Bitmap bitmap = b.copy(Bitmap.Config.ARGB_8888, true);
+                        new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Log.e("game", "detect");
+                                try {
+                                    detector.startDetect(bitmap);
+                                } catch (Exception e) {
+                                    Log.e("err", Log.getStackTraceString(e));
+                                }
                             }
                         }).start();
                     }
@@ -269,20 +284,7 @@ public class Game extends AppCompatActivity {
         try {
             previewRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
             previewRequestBuilder.addTarget(surfaceHolder.getSurface());
-            previewReader =
-                    ImageReader.newInstance(width, height, ImageFormat.JPEG, 2);
-
-            previewReader.setOnImageAvailableListener(new ImageReader.OnImageAvailableListener() {
-                @Override
-                public void onImageAvailable(ImageReader reader) {
-                    Image image = reader.acquireNextImage();
-                    //Log.e("preview", image.getWidth() + " * " + image.getHeight());
-                    image.close();
-                }
-            }, childHandler);
-            previewRequestBuilder.addTarget(previewReader.getSurface());
-
-            cameraDevice.createCaptureSession(Arrays.asList(surfaceHolder.getSurface(), previewReader.getSurface(), imageReader.getSurface()), new CameraCaptureSession.StateCallback() {
+            cameraDevice.createCaptureSession(Arrays.asList(surfaceHolder.getSurface(), imageReader.getSurface()), new CameraCaptureSession.StateCallback() {
                 @Override
                 public void onConfigured(CameraCaptureSession cameraCaptureSession) {
                     if (cameraDevice == null) return;
@@ -315,6 +317,7 @@ public class Game extends AppCompatActivity {
             captureRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
             captureRequestBuilder.set(CaptureRequest.JPEG_ORIENTATION, 0);
             CaptureRequest mCaptureRequest = captureRequestBuilder.build();
+            Log.e("game", "capture");
             cameraCaptureSession.capture(mCaptureRequest, null, childHandler);
         } catch (CameraAccessException e) {
             Log.e("game", Log.getStackTraceString(e));
@@ -337,13 +340,28 @@ public class Game extends AppCompatActivity {
                             if (treasure > 0) {
                                 Img_treasure.setVisibility(View.VISIBLE);
                                 imageView.setVisibility(View.GONE);
-                                Img_treasure.setX(initTreasureX);
-                                Img_treasure.setY(initTreasureY);
                             } else if (treasure == 0) {
-                                for (int i = 0; i < hide.length; i++) {
-                                    Log.e("game", "Hide" + i + ": " + hide[i].getWidth() + " * " + hide[i].getHeight());
-                                }
-                                Game.client.Send(Game.roomID + "PLAY");
+                                Img_treasure.setVisibility(View.GONE);
+                                imageView.setVisibility(View.GONE);
+                                isHost = false;
+                                new Thread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        while (true) {
+                                            try {
+                                                Thread.sleep(5000);
+                                            } catch (InterruptedException e) {
+                                                Log.e("err", Log.getStackTraceString(e));
+                                            }
+                                            if (detector.isReady) {
+                                                detector.isReady = false;
+                                                takePicture();
+                                            }
+                                        }
+                                    }
+                                }).start();
+
+                                //Game.client.Send(Game.roomID + "PLAY");
                             }
                         } else {
                             Img_treasure.setVisibility(View.VISIBLE);

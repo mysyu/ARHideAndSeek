@@ -27,7 +27,7 @@
         app:srcCompat="@mipmap/treasure" />
 
     <ImageView
-        android:id="@+id/Img_hide"
+        android:id="@+id/Img_detect"
         android:layout_width="160dp"
         android:layout_height="120dp"
         android:layout_centerHorizontal="true"

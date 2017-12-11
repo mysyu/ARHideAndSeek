@@ -27,6 +27,7 @@ public class GameCreate extends AppCompatActivity {
                         MySQL.Connect();
                         Game.name += "-" + MySQL.IP;
                         Log.e("Name", Game.name);
+                        MySQL.Excute("DELETE FROM capture WHERE ID IN ( SELECT ID FROM game WHERE host like ?)", new Object[]{"%" + MySQL.IP + "%"});
                         MySQL.Excute("DELETE FROM game WHERE host like ?", new Object[]{"%" + MySQL.IP + "%"});
                         if (MySQL.Excute("INSERT INTO game VALUES(GenerateRoomID(),?)", new Object[]{Game.name}) == 1) {
                             ResultSet result = MySQL.Select("SELECT ID FROM game WHERE host=? LIMIT 1", new Object[]{Game.name});
