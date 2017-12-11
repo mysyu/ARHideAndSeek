@@ -78,7 +78,7 @@ public class Load extends AppCompatActivity {
                         @Override
                         public void run() {
                             try {
-                                Thread.sleep(1000);
+                                Thread.sleep(3000);
                                 handler.sendEmptyMessage(1);
                             } catch (InterruptedException e) {
                                 Log.e("load", Log.getStackTraceString(e));
