@@ -18,8 +18,8 @@ public class Stat extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.stat);
-        change = (Button) findViewById(R.id.change);
-        change.setOnClickListener(new View.OnClickListener() {
+      //  change = (Button) findViewById(R.id.change);
+        /* change.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if (change.getText().toString().equals("Hide")) {
@@ -29,7 +29,7 @@ public class Stat extends AppCompatActivity {
                 }
                 setImage();
             }
-        });
+        });*/
         findViewById(R.id.last).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -45,7 +45,7 @@ public class Stat extends AppCompatActivity {
             }
         });
         current = 0;
-        images = (ImageView) findViewById(R.id.images);
+        images = (ImageView) findViewById(R.id.imageView1);
         setImage();
         Game.client.handler = handler;
     }
