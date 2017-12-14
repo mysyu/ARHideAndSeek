@@ -60,7 +60,8 @@ public class Room extends AppCompatActivity {
                 });
             }
         }else{
-                initTeam_score();
+            // 加入個人比分
+            initTeam_score();
                 // Next 按鈕 (to stat page)
                 Button next = (Button) findViewById(R.id.start);
                 next.setText("NEXT");
@@ -93,9 +94,6 @@ public class Room extends AppCompatActivity {
                         team_b_score.setText(now_score_b);
                     }
                 });
-
-                // 加入個人比分
-
         }
     }
 
