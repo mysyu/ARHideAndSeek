@@ -1,6 +1,5 @@
 package tw.edu.yzu.cse.arhideandseek;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -13,7 +12,8 @@ import android.widget.ImageView;
 public class Stat extends AppCompatActivity {
     private Button change = null;
     private Integer current = null;
-    private ImageView images = null;
+    private ImageView Img_hide = null;
+    private ImageView Img_seek = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,23 +48,19 @@ public class Stat extends AppCompatActivity {
         findViewById(R.id.detail).setOnClickListener(new View.OnClickListener() {
             @Override
                public void onClick(View v) {
-                Intent intent = new Intent();
-                intent.setClass(Stat.this , Room.class);
-                startActivity(intent);
+                Stat.this.finish();
                }
         });
+        Img_hide = (ImageView) findViewById(R.id.imageView1);
+        Img_seek = (ImageView) findViewById(R.id.imageView1);
         current = 0;
-        images = (ImageView) findViewById(R.id.imageView1);
         setImage();
         Game.client.handler = handler;
     }
 
     private void setImage() {
-        if (change.getText().toString().equals("Hide")) {
-            images.setImageBitmap(Game.hide[current]);
-        } else if (change.getText().toString().equals("Seek")) {
-            images.setImageBitmap(Game.seek[current]);
-        }
+        Img_hide.setImageBitmap(Game.hide[current]);
+        Img_seek.setImageBitmap(Game.seek[current]);
     }
 
     Handler handler = new Handler() {

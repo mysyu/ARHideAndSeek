@@ -62,38 +62,41 @@ public class Room extends AppCompatActivity {
         }else{
             // 加入個人比分
             initTeam_score();
-                // Next 按鈕 (to stat page)
-                Button next = (Button) findViewById(R.id.start);
-                next.setText("NEXT");
+            // Next 按鈕 (to stat page)
+            Button next = (Button) findViewById(R.id.start);
+            next.setText("NEXT");
 
-                next.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        Intent intent = new Intent();
-                        intent.setClass(Room.this , Stat.class);
-                        startActivity(intent);
-                    }
-                });
+            next.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Intent intent = new Intent();
+                    intent.setClass(Room.this, Stat.class);
+                    startActivity(intent);
+                }
+            });
 
-                // 離開按鈕
-                findViewById(R.id.exit).setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        Game.client.Close();
-                        Room.this.finish();
+            // 離開按鈕
+            findViewById(R.id.exit).setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Game.client.Close();
+                    Room.this.finish();
+                }
+            });
 
-                        // 加入團隊比分
-                        TextView team_a_score = (TextView) findViewById(R.id.team_a_score);
-                        for(int i = 0; i < Game.team_a_score.length; i++)
-                            now_score_a += Game.team_a_score[i];
-                        team_a_score.setText(now_score_a);
+            // 加入團隊比分
+            TextView team_a_score = (TextView) findViewById(R.id.team_a_score);
+            team_a_score.setVisibility(View.VISIBLE);
+            for (int i = 0; i < Game.team_a_score.length; i++)
+                now_score_a += Game.team_a_score[i];
+            team_a_score.setText(now_score_a + "");
 
-                        TextView team_b_score = (TextView) findViewById(R.id.team_b_score);
-                        for(int i = 0; i < Game.team_b_score.length; i++)
-                            now_score_b += Game.team_b_score[i];
-                        team_b_score.setText(now_score_b);
-                    }
-                });
+            TextView team_b_score = (TextView) findViewById(R.id.team_b_score);
+            team_b_score.setVisibility(View.VISIBLE);
+            for (int i = 0; i < Game.team_b_score.length; i++)
+                now_score_b += Game.team_b_score[i];
+            team_b_score.setText(now_score_b + "");
+
         }
     }
 
