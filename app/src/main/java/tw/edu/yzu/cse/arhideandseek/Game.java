@@ -67,6 +67,9 @@ public class Game extends AppCompatActivity {
     public static Bitmap[] hide = null;
     public static Bitmap[] seek = null;
 
+    public static Integer team_a_score[] = {0};
+    public static Integer team_b_score[] = {0};
+
     private ImageView Img_treasure;
     private ImageView Img_detect;
     private SurfaceView surfaceView;
