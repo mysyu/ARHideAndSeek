@@ -1,5 +1,6 @@
 package tw.edu.yzu.cse.arhideandseek;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
@@ -43,6 +44,14 @@ public class Stat extends AppCompatActivity {
                 current = (current + 1 + Game.hide.length) % Game.hide.length;
                 setImage();
             }
+        });
+        findViewById(R.id.detail).setOnClickListener(new View.OnClickListener() {
+            @Override
+               public void onClick(View v) {
+                Intent intent = new Intent();
+                intent.setClass(Stat.this , Room.class);
+                startActivity(intent);
+               }
         });
         current = 0;
         images = (ImageView) findViewById(R.id.imageView1);

@@ -11,4 +11,16 @@
         android:text="TeamA"
         android:textAppearance="@android:style/TextAppearance.Large"
         android:textSize="40sp" />
+
+    <TextView
+        android:id="@+id/team_a_score"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBaseline="@+id/headerTitle"
+        android:layout_alignBottom="@+id/headerTitle"
+        android:layout_alignParentEnd="true"
+        android:layout_marginEnd="43dp"
+        android:textStyle="italic"
+        android:text="0"
+        android:textSize="60sp" />
 </RelativeLayout>
