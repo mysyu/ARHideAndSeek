@@ -7,9 +7,12 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Color;
 import android.graphics.ImageFormat;
+import android.graphics.Matrix;
+import android.graphics.Paint;
 import android.graphics.Rect;
-import android.graphics.drawable.BitmapDrawable;
+import android.graphics.RectF;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraCharacteristics;
@@ -32,12 +35,23 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
+import java.util.List;
 
 import static android.hardware.camera2.CameraAccessException.CAMERA_DISABLED;
 
 public class Game extends AppCompatActivity {
+
+    private static final String TF_OD_API_MODEL_FILE =
+            "file:///android_asset/ssd_mobilenet_v1_android_export.pb";
+    private static final String TF_OD_API_LABELS_FILE = "file:///android_asset/coco_labels_list.txt";
+    private static Classifier objectDetector = null;
+    private Matrix frameToCropTransform;
+    private Matrix cropToFrameTransform;
+
+
 
     public static String name = null;
     public static String roomID = null;
@@ -52,7 +66,6 @@ public class Game extends AppCompatActivity {
     public static Integer status = null;
     public static Bitmap[] hide = null;
     public static Bitmap[] seek = null;
-    public Detector detector = null;
 
     private ImageView Img_treasure;
     private ImageView Img_detect;
@@ -64,6 +77,7 @@ public class Game extends AppCompatActivity {
     private Handler childHandler, mainHandler;
     private String cameraID;
     private ImageReader imageReader;
+    private ImageReader previewReader;
     private CameraCaptureSession cameraCaptureSession;
     private CameraDevice cameraDevice;
     private int width;
@@ -125,7 +139,6 @@ public class Game extends AppCompatActivity {
                                 Img_treasure.setX(initTreasureX);
                                 Img_treasure.setY(initTreasureY);
                                 Img_treasure.setVisibility(View.GONE);
-                                takePicture();
                             } else {
                                 Img_treasure.setVisibility(View.VISIBLE);
                                 Img_treasure.setX(initTreasureX);
@@ -159,9 +172,13 @@ public class Game extends AppCompatActivity {
                 Log.e("game", width + " * " + height);
                 Game.this.width = width;
                 Game.this.height = height;
+                try {
+                    objectDetector = TensorFlowObjectDetectionAPIModel.create(getAssets(), TF_OD_API_MODEL_FILE, TF_OD_API_LABELS_FILE, 300, 300);
+                } catch (Exception e) {
+                    Log.e("err", Log.getStackTraceString(e));
+                }
                 if (detect == null) {
                     detect = new Rect((int) Img_detect.getX(), (int) Img_detect.getY(), (int) Img_detect.getX() + Img_detect.getWidth(), (int) Img_detect.getY() + Img_detect.getHeight());
-                    detector = new Detector(Game.treasure, width, height, detect, handler);
                 }
                 initCamera2();
             }
@@ -198,43 +215,26 @@ public class Game extends AppCompatActivity {
                 if (b != null) {
                     Log.e("game", "take picture");
                     b = Bitmap.createScaledBitmap(b, width, height, true);
+                    final Bitmap bitmap = b.copy(Bitmap.Config.ARGB_8888, true);
                     if (isHost) {
-                        b = Bitmap.createBitmap(b, detect.left, detect.top, detect.width(), detect.height());
-                        final Bitmap bitmap = b.copy(Bitmap.Config.ARGB_8888, true);
-                        Canvas canvas = new Canvas(b);
-                        canvas.drawBitmap(((BitmapDrawable) Img_treasure.getDrawable()).getBitmap(), b.getWidth() / 2 - Img_treasure.getWidth() / 2, b.getHeight() / 2 - Img_treasure.getHeight() / 2, null);
                         final int now = Game.hide.length - treasure;
-                        Game.hide[now] = b;
+                        Game.hide[now] = bitmap;
                         imageView.setImageBitmap(b);
                         imageView.setVisibility(View.VISIBLE);
                         new Thread(new Runnable() {
                             @Override
                             public void run() {
-                                int size = bitmap.getRowBytes() * bitmap.getHeight();
-                                ByteBuffer byteBuffer = ByteBuffer.allocate(size);
-                                bitmap.copyPixelsToBuffer(byteBuffer);
+                                ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
                                 try {
-                                    MySQL.Excute("INSERT INTO capture VALUES(?,'HIDE',?,?,?,?)", new Object[]{Game.roomID, now, bitmap.getWidth(), bitmap.getHeight(), byteBuffer.array()});
+                                    MySQL.Excute("INSERT INTO capture VALUES(?,'HIDE',?,?)", new Object[]{Game.roomID, now, stream.toByteArray()});
                                 } catch (Exception e) {
                                     Log.e("err", Log.getStackTraceString(e));
                                 }
-                                detector.setHide(now, bitmap);
                                 handler.sendEmptyMessage(3);
                             }
                         }).start();
                     } else {
-                        final Bitmap bitmap = b.copy(Bitmap.Config.ARGB_8888, true);
-                        new Thread(new Runnable() {
-                            @Override
-                            public void run() {
-                                Log.e("game", "detect");
-                                try {
-                                    detector.startDetect(bitmap);
-                                } catch (Exception e) {
-                                    Log.e("err", Log.getStackTraceString(e));
-                                }
-                            }
-                        }).start();
                     }
                 }
             }
@@ -284,7 +284,51 @@ public class Game extends AppCompatActivity {
         try {
             previewRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW);
             previewRequestBuilder.addTarget(surfaceHolder.getSurface());
-            cameraDevice.createCaptureSession(Arrays.asList(surfaceHolder.getSurface(), imageReader.getSurface()), new CameraCaptureSession.StateCallback() {
+            previewReader = ImageReader.newInstance(width, height, ImageFormat.JPEG, 2);
+            previewReader.setOnImageAvailableListener(new ImageReader.OnImageAvailableListener() {
+                @Override
+                public void onImageAvailable(ImageReader reader) {
+                    Image image = reader.acquireNextImage();
+                    final ByteBuffer buffer = image.getPlanes()[0].getBuffer();
+                    byte[] bytes = new byte[buffer.remaining()];
+                    buffer.get(bytes);
+                    image.close();
+                    Bitmap b = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+                    if (b != null) {
+                        b = Bitmap.createScaledBitmap(b, width, height, true);
+                        final Bitmap crop = Bitmap.createBitmap(300, 300, Bitmap.Config.ARGB_8888), src = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+                        if (isHost) {
+                            Canvas canvas = new Canvas(crop);
+                            frameToCropTransform = new Matrix();
+                            frameToCropTransform.postScale(300 / (float) width, 300 / (float) height);
+                            cropToFrameTransform = new Matrix();
+                            frameToCropTransform.invert(cropToFrameTransform);
+                            canvas.drawBitmap(b, frameToCropTransform, null);
+                            List<Classifier.Recognition> recognitions = objectDetector.recognizeImage(crop);
+
+                            Paint paint = new Paint();
+                            paint.setColor(Color.RED);
+                            canvas = new Canvas(src);
+                            for (Classifier.Recognition recognition : recognitions) {
+                                RectF location = recognition.getLocation();
+                                Log.e("game", recognition.toString());
+                                cropToFrameTransform.mapRect(location);
+                                paint.setStyle(Paint.Style.STROKE);
+                                paint.setStrokeWidth(5f);
+                                canvas.drawRect(location, paint);
+                                paint.setStyle(Paint.Style.FILL);
+                                paint.setTextSize(50);
+                                canvas.drawText(recognition.getTitle(), location.left + 50, location.top + 100, paint);
+                            }
+                            imageView.setVisibility(View.VISIBLE);
+                            imageView.setImageBitmap(src);
+                        } else {
+                        }
+                    }
+                }
+            }, mainHandler);
+            previewRequestBuilder.addTarget(previewReader.getSurface());
+            cameraDevice.createCaptureSession(Arrays.asList(surfaceHolder.getSurface(), previewReader.getSurface()), new CameraCaptureSession.StateCallback() {
                 @Override
                 public void onConfigured(CameraCaptureSession cameraCaptureSession) {
                     if (cameraDevice == null) return;
@@ -308,7 +352,7 @@ public class Game extends AppCompatActivity {
         }
     }
 
-    private void takePicture() {
+    /*private void takePicture() {
         if (cameraDevice == null) return;
         final CaptureRequest.Builder captureRequestBuilder;
         try {
@@ -322,7 +366,7 @@ public class Game extends AppCompatActivity {
         } catch (CameraAccessException e) {
             Log.e("game", Log.getStackTraceString(e));
         }
-    }
+    }*/
 
     private boolean hideTreasure() {
         return true;
@@ -352,10 +396,6 @@ public class Game extends AppCompatActivity {
                                                 Thread.sleep(5000);
                                             } catch (InterruptedException e) {
                                                 Log.e("err", Log.getStackTraceString(e));
-                                            }
-                                            if (detector.isReady) {
-                                                detector.isReady = false;
-                                                takePicture();
                                             }
                                         }
                                     }
@@ -391,6 +431,13 @@ public class Game extends AppCompatActivity {
                     intent.setClass(Game.this, Stat.class);
                     startActivity(intent);
                     Game.this.finish();
+                    break;
+                case 55:
+                    Log.e("hi", "hi");
+                    Bitmap bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+                    bitmap.copyPixelsFromBuffer(ByteBuffer.wrap(msg.getData().getByteArray("IMG")));
+                    imageView.setVisibility(View.VISIBLE);
+                    imageView.setImageBitmap(bitmap);
                     break;
             }
         }
