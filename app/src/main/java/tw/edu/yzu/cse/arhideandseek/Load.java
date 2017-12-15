@@ -26,6 +26,7 @@ public class Load extends AppCompatActivity {
             }
         } else {
             handler.sendEmptyMessage(0);
+
         }
     }
 
