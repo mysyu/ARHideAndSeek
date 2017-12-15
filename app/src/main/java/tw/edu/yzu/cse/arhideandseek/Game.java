@@ -10,6 +10,9 @@ import android.graphics.Canvas;
 import android.graphics.ImageFormat;
 import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorManager;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
 import android.hardware.camera2.CameraCharacteristics;
@@ -75,6 +78,14 @@ public class Game extends AppCompatActivity {
     private float initTreasureX;
     private float initTreasureY;
 
+    private long lastUpdate = -1;
+    private float x, y, z;
+    private float last_x, last_y, last_z;
+    private static final int SHAKE_THRESHOLD = 800;
+    private SensorManager sensorMgr;
+    private boolean isShaked = false;
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -139,6 +150,7 @@ public class Game extends AppCompatActivity {
                     return true;
                 }
             });
+            //nSensorChanged();
             initView();
         } else {
             imageView.setVisibility(View.VISIBLE);
@@ -256,6 +268,8 @@ public class Game extends AppCompatActivity {
     }
 
 
+
+
     /**
      * 摄像头创建监听
      */
@@ -326,6 +340,58 @@ public class Game extends AppCompatActivity {
             Log.e("game", Log.getStackTraceString(e));
         }
     }
+
+    public static float Round(float Rval, int Rpl) {
+        float p = (float)Math.pow(10,Rpl);
+        Rval = Rval * p;
+        float tmp = Math.round(Rval);
+        return (float)tmp/p;
+    }
+
+    public void onSensorChanged(SensorEvent sensorEvent) {
+        if (status == 3) {
+            if (sensorEvent.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+                long curTime = System.currentTimeMillis();
+                // only allow one update every 100ms.
+                if ((curTime - lastUpdate) > 100) {
+                    //long diffTime = (curTime - lastUpdate);
+                    lastUpdate = curTime;
+
+                    x = sensorEvent.values[0];
+                    y = sensorEvent.values[1];
+                    z = sensorEvent.values[2];
+
+                    // 上下晃動（點頭）
+                    if (Round(z, 4) < -0.0 || Round(y, 4) < 1.0) {
+                        Log.d("sensor", "z Right axis: " + z);
+                        Log.d("sensor", "y Left axis: " + y);
+                        Toast.makeText(this, "Right shake detected", Toast.LENGTH_SHORT).show();
+                        isShaked = true;
+                        handler.sendEmptyMessage(4);
+                    }
+                    // 左右晃動（搖頭）
+                    else if (Round(x, 4) > 10.0000 || Round(x, 4) < -10.0000) {
+                        Log.d("sensor", "X Right axis: " + x);
+                        Log.d("sensor", "X Left axis: " + x);
+                        Toast.makeText(this, "Right shake detected", Toast.LENGTH_SHORT).show();
+                        isShaked = true;
+                        handler.sendEmptyMessage(5);
+                    }
+
+                    //float speed = Math.abs(x+y+z - last_x - last_y - last_z)/diffTime * 10000;
+                    //if (speed > SHAKE_THRESHOLD) {
+                    //      yes, this is a shake action! Do something about it!
+                    //   isShaked = true;
+                    //   handler.sendEmptyMessage(4);
+
+                }
+                last_x = x;
+                last_y = y;
+                last_z = z;
+            }
+        }
+    }
+
 
     private boolean hideTreasure() {
         return true;
