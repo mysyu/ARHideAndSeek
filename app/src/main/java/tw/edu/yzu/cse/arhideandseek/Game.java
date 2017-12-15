@@ -31,6 +31,7 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import java.nio.ByteBuffer;
 import java.util.Arrays;
@@ -110,11 +111,14 @@ public class Game extends AppCompatActivity implements ImageReader.OnImageAvaila
         if (isHost) {
             Img_capture.setVisibility(View.VISIBLE);
             Img_hint.setVisibility(View.GONE);
-            initView();
+            captureStatus = 0;
         } else {
-            Img_capture.setVisibility(View.GONE);
+            Img_hint.setImageResource(R.drawable.load);
             Img_hint.setVisibility(View.VISIBLE);
+            Img_capture.setVisibility(View.GONE);
+            captureStatus = 4;
         }
+        initView();
     }
 
     /**
@@ -366,8 +370,12 @@ public class Game extends AppCompatActivity implements ImageReader.OnImageAvaila
                         new Thread(new Runnable() {
                             @Override
                             public void run() {
+                                Game.client.Send(Game.roomID + "HOST" + current + ":" + hide[current]);
+                                if (current + 1 == Game.hide.length) {
+                                    Game.client.Send(Game.roomID + "PLAY");
+                                }
                             }
-                        });
+                        }).start();
                         treasure--;
                         if (treasure > 0) {
                             Img_capture.setVisibility(View.VISIBLE);
@@ -376,25 +384,38 @@ public class Game extends AppCompatActivity implements ImageReader.OnImageAvaila
                             lastFindCount = 0;
                             captureStatus = 0;
                         } else {
-
+                            Img_hint.setImageResource(R.drawable.load);
+                            Img_hint.setVisibility(View.VISIBLE);
+                            Img_capture.setVisibility(View.GONE);
                         }
-                    } else {
-
                     }
+                    break;
                 case 5:
+                    Img_capture.setVisibility(View.VISIBLE);
+                    Img_hint.setVisibility(View.GONE);
+                    lastFind = "";
+                    lastFindCount = 0;
+                    captureStatus = 0;
                     break;
                 case 6:
                     Log.e("game", msg.getData().getString("PLAY", ""));
-                    if (msg.getData().getString("PLAY", "").equals("Start")) {
-                        if (isHost) {
-                            Game.client.handler = null;
-                            Intent intent = new Intent();
-                            intent.setClass(Game.this, Stat.class);
-                            startActivity(intent);
-                            Game.this.finish();
-                        } else {
-                            initView();
-                        }
+                    String current = msg.getData().getString("PLAY", "");
+                    if (current.equals("Start")) {
+                        Toast.makeText(Game.this, current, Toast.LENGTH_SHORT).show();
+                        handler.sendEmptyMessage(7);
+                    } else {
+                        Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.load).copy(Bitmap.Config.ARGB_8888, true);
+                        Canvas canvas = new Canvas(bitmap);
+                        Paint paint = new Paint();
+                        paint.setTextSize(50);
+                        paint.setStyle(Paint.Style.FILL);
+                        paint.setColor(Color.argb(200, 255, 255, 255));
+                        canvas.drawRect(width / 2 - 100, height - 200, width / 2 + 100, height, paint);
+                        paint.setColor(Color.BLACK);
+                        canvas.drawText(current, width / 2 - 50, height - 150, paint);
+                        Img_hint.setImageBitmap(bitmap);
+                        Img_hint.setVisibility(View.VISIBLE);
+                        Img_capture.setVisibility(View.GONE);
                     }
                     break;
                 case 7:

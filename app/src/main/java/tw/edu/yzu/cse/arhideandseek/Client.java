@@ -112,6 +112,7 @@ public class Client extends WebSocketClient {
                 message.setData(bundle);
                 handler.sendMessage(message);
                 Log.e("client", s);
+            } else if (s.startsWith("HIDE")) {
             } else if (s.equals("FINISH")) {
                 Game.status = 3;
                 handler.sendEmptyMessage(7);
