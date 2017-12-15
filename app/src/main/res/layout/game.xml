@@ -13,25 +13,13 @@
         android:id="@+id/capture"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:visibility="gone"
-        app:srcCompat="@android:color/black" />
+        app:srcCompat="@android:color/transparent" />
 
     <ImageView
-        android:id="@+id/Img_treasure"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginBottom="34dp"
-        android:scaleType="fitXY"
-        app:srcCompat="@mipmap/treasure" />
+        android:id="@+id/hint"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:srcCompat="@android:color/transparent" />
 
-    <ImageView
-        android:id="@+id/Img_detect"
-        android:layout_width="160dp"
-        android:layout_height="120dp"
-        android:layout_centerHorizontal="true"
-        android:layout_centerVertical="true"
-        app:srcCompat="@drawable/border" />
 
 </RelativeLayout>

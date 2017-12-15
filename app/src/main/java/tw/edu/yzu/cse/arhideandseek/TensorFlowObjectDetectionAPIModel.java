@@ -29,8 +29,7 @@ public class TensorFlowObjectDetectionAPIModel implements Classifier {
 
     // Config values.
     private String inputName;
-    private int width;
-    private int height;
+    private int inputSize;
 
     // Pre-allocated buffers.
     private Vector<String> labels = new Vector<String>();
@@ -57,8 +56,7 @@ public class TensorFlowObjectDetectionAPIModel implements Classifier {
             final AssetManager assetManager,
             final String modelFilename,
             final String labelFilename,
-            final int width,
-            final int height) throws IOException {
+            final int inputSize) throws IOException {
         final TensorFlowObjectDetectionAPIModel d = new TensorFlowObjectDetectionAPIModel();
 
         InputStream labelsInput = null;
@@ -85,8 +83,7 @@ public class TensorFlowObjectDetectionAPIModel implements Classifier {
         if (inputOp == null) {
             throw new RuntimeException("Failed to find input Node '" + d.inputName + "'");
         }
-        d.width = width;
-        d.height = height;
+        d.inputSize = inputSize;
         // The outputScoresName node has a shape of [N, NumLocations], where N
         // is the batch size.
         final Operation outputOp1 = g.operation("detection_scores");
@@ -105,8 +102,8 @@ public class TensorFlowObjectDetectionAPIModel implements Classifier {
         // Pre-allocate buffers.
         d.outputNames = new String[]{"detection_boxes", "detection_scores",
                 "detection_classes", "num_detections"};
-        d.intValues = new int[d.width * d.height];
-        d.byteValues = new byte[d.width * d.height * 3];
+        d.intValues = new int[d.inputSize * d.inputSize];
+        d.byteValues = new byte[d.inputSize * d.inputSize * 3];
         d.outputScores = new float[MAX_RESULTS];
         d.outputLocations = new float[MAX_RESULTS * 4];
         d.outputClasses = new float[MAX_RESULTS];
@@ -129,7 +126,7 @@ public class TensorFlowObjectDetectionAPIModel implements Classifier {
             byteValues[i * 3 + 0] = (byte) ((intValues[i] >> 16) & 0xFF);
         }
         // Copy the input data into TensorFlow.
-        inferenceInterface.feed(inputName, byteValues, 1, width, height, 3);
+        inferenceInterface.feed(inputName, byteValues, 1, inputSize, inputSize, 3);
 
         // Run the inference call.
         inferenceInterface.run(outputNames, logStats);
@@ -160,10 +157,10 @@ public class TensorFlowObjectDetectionAPIModel implements Classifier {
         for (int i = 0; i < outputScores.length; ++i) {
             final RectF detection =
                     new RectF(
-                            outputLocations[4 * i + 1] * width,
-                            outputLocations[4 * i] * height,
-                            outputLocations[4 * i + 3] * width,
-                            outputLocations[4 * i + 2] * height);
+                            outputLocations[4 * i + 1] * inputSize,
+                            outputLocations[4 * i] * inputSize,
+                            outputLocations[4 * i + 3] * inputSize,
+                            outputLocations[4 * i + 2] * inputSize);
             pq.add(
                     new Recognition("" + i, labels.get((int) outputClasses[i]), outputScores[i], detection));
         }

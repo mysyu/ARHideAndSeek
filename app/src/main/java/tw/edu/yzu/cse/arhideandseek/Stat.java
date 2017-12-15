@@ -59,8 +59,8 @@ public class Stat extends AppCompatActivity {
     }
 
     private void setImage() {
-        Img_hide.setImageBitmap(Game.hide[current]);
-        Img_seek.setImageBitmap(Game.seek[current]);
+        Img_hide.setImageBitmap(Game.Img_hide[current]);
+        Img_seek.setImageBitmap(Game.Img_hide[current]);
     }
 
     Handler handler = new Handler() {
