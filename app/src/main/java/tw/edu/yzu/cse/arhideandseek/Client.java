@@ -108,13 +108,13 @@ public class Client extends WebSocketClient {
                 Bundle bundle = new Bundle();
                 bundle.putString("PLAY", s);
                 Message message = new Message();
-                message.what = 5;
+                message.what = 6;
                 message.setData(bundle);
                 handler.sendMessage(message);
                 Log.e("client", s);
             } else if (s.equals("FINISH")) {
                 Game.status = 3;
-                handler.sendEmptyMessage(6);
+                handler.sendEmptyMessage(7);
             } else if (s.equals("EXIT")) {
                 Game.client.Close();
                 handler.sendEmptyMessage(-1);

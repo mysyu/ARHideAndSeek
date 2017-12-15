@@ -382,6 +382,8 @@ public class Game extends AppCompatActivity implements ImageReader.OnImageAvaila
 
                     }
                 case 5:
+                    break;
+                case 6:
                     Log.e("game", msg.getData().getString("PLAY", ""));
                     if (msg.getData().getString("PLAY", "").equals("Start")) {
                         if (isHost) {
@@ -395,7 +397,7 @@ public class Game extends AppCompatActivity implements ImageReader.OnImageAvaila
                         }
                     }
                     break;
-                case 6:
+                case 7:
                     Game.client.handler = null;
                     Intent intent = new Intent();
                     intent.setClass(Game.this, Stat.class);
