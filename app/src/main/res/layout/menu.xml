@@ -43,11 +43,11 @@
         android:text="關主"
         android:textAppearance="@android:style/TextAppearance.Large"
         android:textSize="36sp"
-        app:layout_constraintBottom_toTopOf="@+id/player"
-        app:layout_constraintStart_toStartOf="@+id/player" />
+        app:layout_constraintBottom_toTopOf="@+id/player_name"
+        app:layout_constraintStart_toStartOf="@+id/player_name" />
 
     <Button
-        android:id="@+id/player"
+        android:id="@+id/player_name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="127dp"

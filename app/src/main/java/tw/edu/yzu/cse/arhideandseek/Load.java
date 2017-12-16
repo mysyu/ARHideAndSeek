@@ -3,6 +3,8 @@ package tw.edu.yzu.cse.arhideandseek;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.hardware.Sensor;
+import android.hardware.SensorManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -18,6 +20,13 @@ public class Load extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.load);
+        SensorManager sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+        Sensor sensor = sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+        if (sensor == null) {
+            handler.sendEmptyMessage(-2);
+        }
+
+
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                 requestPermissions(new String[]{Manifest.permission.CAMERA}, 0);
@@ -64,6 +73,10 @@ public class Load extends AppCompatActivity {
                     break;
                 case -1:
                     Toast.makeText(Load.this, "You do not have camera permission", Toast.LENGTH_SHORT).show();
+                    Load.this.finish();
+                    break;
+                case -2:
+                    Toast.makeText(Load.this, "請在有陀螺儀的設備上遊玩", Toast.LENGTH_SHORT).show();
                     Load.this.finish();
                     break;
             }

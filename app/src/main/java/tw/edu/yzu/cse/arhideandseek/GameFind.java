@@ -65,11 +65,18 @@ public class GameFind extends AppCompatActivity {
         public void handleMessage(Message msg) {
             switch (msg.what) {
                 case 0:
-                    Game.client.handler = null;
-                    Intent intent = new Intent();
-                    intent.setClass(GameFind.this, Room.class);
-                    startActivity(intent);
-                    GameFind.this.finish();
+                    if (Game.status == 0) {
+                        Game.client.handler = null;
+                        Intent intent = new Intent();
+                        intent.setClass(GameFind.this, Room.class);
+                        startActivity(intent);
+                        GameFind.this.finish();
+                        break;
+                    } else {
+                        Toast.makeText(GameFind.this, "The Room has started the Game. Please wait for next Game.", Toast.LENGTH_SHORT).show();
+                        Game.client.close();
+                        Game.client = null;
+                    }
                     break;
                 case 1:
                     Game.client.Send(Game.roomID + "PLAYER:" + Game.name);

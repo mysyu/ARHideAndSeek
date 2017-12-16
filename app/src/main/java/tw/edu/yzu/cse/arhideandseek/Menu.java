@@ -26,7 +26,7 @@ public class Menu extends AppCompatActivity {
                 }
             }
         });
-        findViewById(R.id.player).setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.player_name).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Log.e("menu", "player");

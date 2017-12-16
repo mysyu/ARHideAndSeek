@@ -1,6 +1,7 @@
 package tw.edu.yzu.cse.arhideandseek;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -14,6 +15,7 @@ import android.graphics.Paint;
 import android.graphics.RectF;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.hardware.camera2.CameraAccessException;
 import android.hardware.camera2.CameraCaptureSession;
@@ -34,15 +36,16 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.widget.ImageView;
-import android.widget.Toast;
+import android.widget.TextView;
 
+import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.List;
 
 import static android.hardware.camera2.CameraAccessException.CAMERA_DISABLED;
 
-public class Game extends AppCompatActivity implements ImageReader.OnImageAvailableListener {
+public class Game extends AppCompatActivity implements ImageReader.OnImageAvailableListener, SensorEventListener {
 
     private static final String TF_OD_API_MODEL_FILE =
             "file:///android_asset/ssd_mobilenet_v1_android_export.pb";
@@ -76,6 +79,7 @@ public class Game extends AppCompatActivity implements ImageReader.OnImageAvaila
     private SurfaceHolder surfaceHolder;
     private ImageView Img_capture;
     private ImageView Img_hint;
+    private TextView hint;
     private CameraManager cameraManager;
     private CaptureRequest.Builder previewRequestBuilder;
     private Handler childHandler, mainHandler;
@@ -88,14 +92,12 @@ public class Game extends AppCompatActivity implements ImageReader.OnImageAvaila
     private String lastFind = "";
     private int lastFindCount = 0;
     private int captureStatus = 0;
+    private int captureIndex = 0;
+    private Bitmap capture = null;
+    private int life = 3;
 
-    private long lastUpdate = -1;
     private float x, y, z;
-    private float last_x, last_y, last_z;
-    private static final int SHAKE_THRESHOLD = 800;
-    private SensorManager sensorMgr;
     private boolean isShaked = false;
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -119,16 +121,22 @@ public class Game extends AppCompatActivity implements ImageReader.OnImageAvaila
         Img_capture.bringToFront();
         Img_hint = (ImageView) findViewById(R.id.hint);
         Img_hint.bringToFront();
+        hint = (TextView) findViewById(R.id.hint_text);
+        hint.bringToFront();
         if (isHost) {
             Img_capture.setVisibility(View.VISIBLE);
             Img_hint.setVisibility(View.GONE);
+            hint.setText("");
             captureStatus = 0;
         } else {
-            Img_hint.setImageResource(R.drawable.load);
+            Img_hint.setBackgroundColor(Color.WHITE);
             Img_hint.setVisibility(View.VISIBLE);
+            hint.setText("");
             Img_capture.setVisibility(View.GONE);
             captureStatus = 4;
         }
+        SensorManager sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+        sensorManager.registerListener(this, sensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE), SensorManager.SENSOR_DELAY_GAME);
         initView();
     }
 
@@ -149,7 +157,7 @@ public class Game extends AppCompatActivity implements ImageReader.OnImageAvaila
                 Game.this.width = width;
                 Game.this.height = height;
                 frameToCropTransform = new Matrix();
-                frameToCropTransform.postScale(300 / (float) width, 300 / (float) height);
+                frameToCropTransform.postScale(TF_OD_API_INPUT_SIZE / (float) width, TF_OD_API_INPUT_SIZE / (float) height);
                 cropToFrameTransform = new Matrix();
                 frameToCropTransform.invert(cropToFrameTransform);
                 try {
@@ -259,7 +267,7 @@ public class Game extends AppCompatActivity implements ImageReader.OnImageAvaila
         image.close();
         Bitmap b = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
         if (captureStatus == 0 && b != null) {
-            b = Bitmap.createScaledBitmap(b, width, height, true);
+            b = Bitmap.createScaledBitmap(b, width, height, true).copy(Bitmap.Config.ARGB_8888, true);
             final Bitmap crop = Bitmap.createBitmap(TF_OD_API_INPUT_SIZE, TF_OD_API_INPUT_SIZE, Bitmap.Config.ARGB_8888), src = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
             Canvas canvas = new Canvas(crop);
             Canvas findCanvas = new Canvas(b);
@@ -275,6 +283,9 @@ public class Game extends AppCompatActivity implements ImageReader.OnImageAvaila
                 RectF location = recognition.getLocation();
                 Log.e("game", recognition.toString());
                 cropToFrameTransform.mapRect(location);
+                if (isHost && Arrays.asList(hide).contains(recognition.getTitle())) {
+                    lock = true;
+                }
                 if (location.contains(width / 2, height / 2) && !lock) {
                     lock = true;
                     paint.setColor(Color.BLUE);
@@ -294,11 +305,12 @@ public class Game extends AppCompatActivity implements ImageReader.OnImageAvaila
                             if (isHost) {
                                 Game.Img_hide[Img_hide.length - treasure] = b;
                                 Game.hide[Img_hide.length - treasure] = lastFind;
-                                handler.sendEmptyMessage(3);
-                                return;
                             } else {
+                                captureIndex = Arrays.asList(hide).indexOf(recognition.getTitle());
+                                capture = b;
                             }
-
+                            handler.sendEmptyMessage(3);
+                            return;
                         }
                     } else {
                         lastFind = recognition.getTitle();
@@ -347,49 +359,41 @@ public class Game extends AppCompatActivity implements ImageReader.OnImageAvaila
     }
 
     public void onSensorChanged(SensorEvent sensorEvent) {
-        if (status == 3) {
-            if (sensorEvent.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+        if (captureStatus == 3 && !isShaked) {
+
+            if (sensorEvent.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
                 long curTime = System.currentTimeMillis();
-                // only allow one update every 100ms.
-                if ((curTime - lastUpdate) > 100) {
-                    //long diffTime = (curTime - lastUpdate);
-                    lastUpdate = curTime;
 
-                    x = sensorEvent.values[0];
-                    y = sensorEvent.values[1];
-                    z = sensorEvent.values[2];
+                x = sensorEvent.values[0];
+                y = sensorEvent.values[1];
+                z = sensorEvent.values[2];
 
-                    // 上下晃動（點頭）
-                    if (Round(z, 4) < -0.0 || Round(y, 4) < 1.0) {
-                        Log.d("sensor", "z Right axis: " + z);
-                        Log.d("sensor", "y Left axis: " + y);
-                        Toast.makeText(this, "Right shake detected", Toast.LENGTH_SHORT).show();
-                        isShaked = true;
+                if (Math.abs(z) < 2 && ((Math.abs(x) < 2) ^ (Math.abs(y) < 2))) {
+
+                    Log.e("game", x + " " + y + " " + z);
+                    isShaked = true;
+
+                    if (Math.abs(x) < 1) {
+                        Log.e("game", "nod");
                         handler.sendEmptyMessage(4);
-                    }
-                    // 左右晃動（搖頭）
-                    else if (Round(x, 4) > 10.0000 || Round(x, 4) < -10.0000) {
-                        Log.d("sensor", "X Right axis: " + x);
-                        Log.d("sensor", "X Left axis: " + x);
-                        Toast.makeText(this, "Right shake detected", Toast.LENGTH_SHORT).show();
-                        isShaked = true;
+                    } else if (Math.abs(y) < 1) {
+                        Log.e("game", "shake");
+                        hide[Game.hide.length - Game.treasure] = null;
+                        Img_hide[Game.hide.length - Game.treasure] = null;
                         handler.sendEmptyMessage(5);
                     }
-
-                    //float speed = Math.abs(x+y+z - last_x - last_y - last_z)/diffTime * 10000;
-                    //if (speed > SHAKE_THRESHOLD) {
-                    //      yes, this is a shake action! Do something about it!
-                    //   isShaked = true;
-                    //   handler.sendEmptyMessage(4);
-
                 }
-                last_x = x;
-                last_y = y;
-                last_z = z;
+
             }
         }
     }
 
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int accuracy) {
+
+    }
+
+    @SuppressLint("HandlerLeak")
     Handler handler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
@@ -397,33 +401,28 @@ public class Game extends AppCompatActivity implements ImageReader.OnImageAvaila
                 case 3:
                     if (captureStatus == 1) {
                         captureStatus = 2;
+                        Bitmap bitmap;
                         if (isHost) {
-                            Bitmap bitmap = Game.Img_hide[Img_hide.length - treasure].copy(Bitmap.Config.ARGB_8888, true);
-                            Canvas canvas = new Canvas(bitmap);
-                            Paint paint = new Paint();
-                            paint.setTextSize(50);
-                            paint.setStyle(Paint.Style.FILL);
-                            paint.setColor(Color.argb(200, 255, 255, 255));
-                            canvas.drawRect(width / 4, height * 3 / 4, width * 3 / 4, height, paint);
-                            paint.setColor(Color.BLACK);
-                            canvas.drawText("Nod for Accept\t\t\tShake for Cancel", width / 4 + 50, height * 3 / 4 + 150, paint);
-                            Img_hint.setImageBitmap(bitmap);
-                            Img_hint.setVisibility(View.VISIBLE);
-                            Img_capture.setVisibility(View.GONE);
-                            captureStatus = 3;
-                            new Thread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    try {
-                                        Thread.sleep(3000);
-                                        captureStatus = 4;
-                                        handler.sendEmptyMessage(4);
-                                    } catch (InterruptedException e) {
-                                        e.printStackTrace();
-                                    }
-                                }
-                            }).start();
+                            Img_hint.setImageBitmap(Game.Img_hide[Img_hide.length - treasure]);
+                        } else {
+                            Img_hint.setImageBitmap(capture);
                         }
+                        Img_hint.setVisibility(View.VISIBLE);
+                        hint.setText("Nod for Accept\t\t\tShake for Cancel");
+                        Img_capture.setVisibility(View.GONE);
+                        captureStatus = 3;
+                        /*new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                try {
+                                    Thread.sleep(3000);
+                                    captureStatus = 4;
+                                    handler.sendEmptyMessage(4);
+                                } catch (InterruptedException e) {
+                                    Log.e("game",Log.getStackTraceString(e));
+                                }
+                            }
+                        }).start();*/
                     }
                     break;
                 case 4:
@@ -432,58 +431,111 @@ public class Game extends AppCompatActivity implements ImageReader.OnImageAvaila
                         new Thread(new Runnable() {
                             @Override
                             public void run() {
-                                Game.client.Send(Game.roomID + "HOST" + current + ":" + hide[current]);
-                                if (current + 1 == Game.hide.length) {
-                                    Game.client.Send(Game.roomID + "PLAY");
+                                ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                                Img_hide[current].compress(Bitmap.CompressFormat.JPEG, 100, stream);
+                                try {
+                                    MySQL.Excute("INSERT INTO capture VALUES(?,'HIDE',?,?)", new Object[]{roomID, current, stream.toByteArray()});
+                                    Game.client.Send(Game.roomID + "HIDE;" + current + ";" + hide[current]);
+                                    if (current + 1 == Game.hide.length) {
+                                        Game.client.Send(Game.roomID + "PLAY");
+                                    }
+                                } catch (Exception e) {
+                                    Log.e("game", Log.getStackTraceString(e));
                                 }
                             }
                         }).start();
                         treasure--;
                         if (treasure > 0) {
-                            Img_capture.setVisibility(View.VISIBLE);
-                            Img_hint.setVisibility(View.GONE);
-                            lastFind = "";
-                            lastFindCount = 0;
-                            captureStatus = 0;
+                            handler.sendEmptyMessage(5);
                         } else {
-                            Img_hint.setImageResource(R.drawable.load);
+                            Img_hint.setImageBitmap(null);
+                            Img_hint.setBackgroundColor(Color.WHITE);
                             Img_hint.setVisibility(View.VISIBLE);
                             Img_capture.setVisibility(View.GONE);
                         }
+                    } else {
+                        new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                                capture.compress(Bitmap.CompressFormat.JPEG, 100, stream);
+                                try {
+                                    if (captureIndex == -1) throw new Exception("Fail");
+                                    MySQL.Excute("INSERT INTO capture VALUES(?,'SEEK',?,?)", new Object[]{roomID, captureIndex, stream.toByteArray()});
+                                    Game.client.Send(Game.roomID + "SEEK;" + captureIndex + ";" + hide[captureIndex] + ";" + name);
+                                    handler.sendEmptyMessage(5);
+                                } catch (Exception e) {
+                                    if (e.getMessage().equals("Fail")) {
+                                        handler.sendEmptyMessage(8);
+                                    } else {
+                                        Log.e("game", Log.getStackTraceString(e));
+                                    }
+                                }
+                            }
+                        }).start();
                     }
                     break;
                 case 5:
                     Img_capture.setVisibility(View.VISIBLE);
                     Img_hint.setVisibility(View.GONE);
+                    hint.setText("");
                     lastFind = "";
                     lastFindCount = 0;
                     captureStatus = 0;
+                    isShaked = false;
                     break;
                 case 6:
-                    Log.e("game", msg.getData().getString("PLAY", ""));
-                    String current = msg.getData().getString("PLAY", "");
-                    if (current.equals("Start")) {
-                        Toast.makeText(Game.this, current, Toast.LENGTH_SHORT).show();
-                        handler.sendEmptyMessage(7);
-                    } else {
-                        Bitmap bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.load).copy(Bitmap.Config.ARGB_8888, true);
-                        Canvas canvas = new Canvas(bitmap);
-                        Paint paint = new Paint();
-                        paint.setTextSize(50);
-                        paint.setStyle(Paint.Style.FILL);
-                        paint.setColor(Color.argb(200, 255, 255, 255));
-                        canvas.drawRect(width / 2 - 100, height - 200, width / 2 + 100, height, paint);
-                        paint.setColor(Color.BLACK);
-                        canvas.drawText(current, width / 2 - 50, height - 150, paint);
-                        Img_hint.setImageBitmap(bitmap);
+                    String now = msg.getData().getString("PLAY", "");
+                    Log.e("game", now);
+                    if (now.equals("Start")) {
+                        hint.setText(now);
+                        //isHost = false;
+                        if (isHost) {
+                            handler.sendEmptyMessage(9);
+                        } else {
+                            handler.sendEmptyMessage(5);
+                        }
+                    } else if (status == 2) {
+                        hint.setText(now);
+                        Img_hint.setImageBitmap(null);
+                        Img_hint.setBackgroundColor(Color.WHITE);
                         Img_hint.setVisibility(View.VISIBLE);
                         Img_capture.setVisibility(View.GONE);
                     }
                     break;
                 case 7:
+                    int current = msg.getData().getInt("SEEK", -1);
+                    String who = msg.getData().getString("WHO", "");
+                    Log.e("game", "SEEK" + current + ":" + who);
+                    if (who.equals(name)) {
+                        life++;
+                    }
+                    hint.setText("SEEK" + current + ":" + who);
+                    break;
+                case 8:
+                    life--;
+                    hint.setText("Fail! Life: " + life);
+                    Log.e("game", "Fail! Life: " + life);
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                Thread.sleep(3000);
+                            } catch (InterruptedException e) {
+                                e.printStackTrace();
+                            }
+                            if (life == 0) {
+                                handler.sendEmptyMessage(9);
+                            } else {
+                                handler.sendEmptyMessage(5);
+                            }
+                        }
+                    }).start();
+                    break;
+                case 9:
                     Game.client.handler = null;
                     Intent intent = new Intent();
-                    intent.setClass(Game.this, Stat.class);
+                    intent.setClass(Game.this, Room.class);
                     startActivity(intent);
                     Game.this.finish();
                     break;

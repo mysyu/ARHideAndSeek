@@ -23,6 +23,6 @@
         android:text="0"
         android:textSize="60sp"
         android:textStyle="italic"
-        android:visibility="gone" />
+        android:visibility="visible" />
 
 </RelativeLayout>
