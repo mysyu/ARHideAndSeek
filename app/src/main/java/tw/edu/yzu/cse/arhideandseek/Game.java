@@ -47,39 +47,20 @@ import static android.hardware.camera2.CameraAccessException.CAMERA_DISABLED;
 
 public class Game extends AppCompatActivity implements ImageReader.OnImageAvailableListener, SensorEventListener {
 
-    private static final String TF_OD_API_MODEL_FILE =
-            "file:///android_asset/ssd_mobilenet_v1_android_export.pb";
+    private static final String TF_OD_API_MODEL_FILE = "file:///android_asset/ssd_mobilenet_v1_android_export.pb";
     private static final String TF_OD_API_LABELS_FILE = "file:///android_asset/coco_labels_list.txt";
     private static final int TF_OD_API_INPUT_SIZE = 300;
+
     private static Classifier objectDetector = null;
     private Matrix frameToCropTransform = null;
     private Matrix cropToFrameTransform = null;
 
-
-
-    public static String name = null;
-    public static String roomID = null;
-    public static String host = null;
-    public static Boolean isHost = null;
-    public static Integer time = null;
-    public static Boolean useCardBoard = null;
-    public static Integer treasure = null;
-    public static String teamA = null;
-    public static String teamB = null;
-    public static Client client = null;
-    public static Integer status = null;
-    public static Bitmap[] Img_hide = null;
-    public static Bitmap[] Img_seek = null;
-    public static String[] hide = null;
-    public static String[] seek = null;
-    public static Integer team_a_score[] = null;
-    public static Integer team_b_score[] = null;
-
-    private SurfaceView surfaceView;
-    private SurfaceHolder surfaceHolder;
     private ImageView Img_capture;
     private ImageView Img_hint;
     private TextView hint;
+
+    private SurfaceView surfaceView;
+    private SurfaceHolder surfaceHolder;
     private CameraManager cameraManager;
     private CaptureRequest.Builder previewRequestBuilder;
     private Handler childHandler, mainHandler;
@@ -87,6 +68,7 @@ public class Game extends AppCompatActivity implements ImageReader.OnImageAvaila
     private ImageReader previewReader;
     private CameraCaptureSession cameraCaptureSession;
     private CameraDevice cameraDevice;
+
     private int width;
     private int height;
     private String lastFind = "";
@@ -103,16 +85,16 @@ public class Game extends AppCompatActivity implements ImageReader.OnImageAvaila
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.game);
-        Game.client.handler = handler;
-        Img_hide = new Bitmap[Game.treasure];
-        Img_seek = new Bitmap[Game.treasure];
-        hide = new String[Game.treasure];
-        seek = new String[Game.treasure];
-        for (int i = 0; i < Game.treasure; i++) {
-            Img_hide[i] = null;
-            Img_seek[i] = null;
-            hide[i] = null;
-            seek[i] = null;
+        Static.client.handler = handler;
+        Static.Img_hide = new Bitmap[Static.treasure];
+        Static.Img_seek = new Bitmap[Static.treasure];
+        Static.hide = new String[Static.treasure];
+        Static.seek = new String[Static.treasure];
+        for (int i = 0; i < Static.treasure; i++) {
+            Static.Img_hide[i] = null;
+            Static.Img_seek[i] = null;
+            Static.hide[i] = null;
+            Static.seek[i] = null;
 
         }
         surfaceView = (SurfaceView) findViewById(R.id.camera);
@@ -123,7 +105,7 @@ public class Game extends AppCompatActivity implements ImageReader.OnImageAvaila
         Img_hint.bringToFront();
         hint = (TextView) findViewById(R.id.hint_text);
         hint.bringToFront();
-        if (isHost) {
+        if (Static.isHost) {
             Img_capture.setVisibility(View.VISIBLE);
             Img_hint.setVisibility(View.GONE);
             hint.setText("");
@@ -283,7 +265,7 @@ public class Game extends AppCompatActivity implements ImageReader.OnImageAvaila
                 RectF location = recognition.getLocation();
                 Log.e("game", recognition.toString());
                 cropToFrameTransform.mapRect(location);
-                if (isHost && Arrays.asList(hide).contains(recognition.getTitle())) {
+                if (Static.isHost && Arrays.asList(Static.hide).contains(recognition.getTitle())) {
                     lock = true;
                 }
                 if (location.contains(width / 2, height / 2) && !lock) {
@@ -302,11 +284,11 @@ public class Game extends AppCompatActivity implements ImageReader.OnImageAvaila
                             findCanvas.drawRect(location, paint);
                             paint.setStyle(Paint.Style.FILL);
                             findCanvas.drawText(recognition.getTitle(), location.left + 50, location.top + 100, paint);
-                            if (isHost) {
-                                Game.Img_hide[Img_hide.length - treasure] = b;
-                                Game.hide[Img_hide.length - treasure] = lastFind;
+                            if (Static.isHost) {
+                                Static.Img_hide[Static.Img_hide.length - Static.treasure] = b;
+                                Static.hide[Static.Img_hide.length - Static.treasure] = lastFind;
                             } else {
-                                captureIndex = Arrays.asList(hide).indexOf(recognition.getTitle());
+                                captureIndex = Arrays.asList(Static.hide).indexOf(recognition.getTitle());
                                 capture = b;
                             }
                             handler.sendEmptyMessage(3);
@@ -335,29 +317,6 @@ public class Game extends AppCompatActivity implements ImageReader.OnImageAvaila
         }
     }
 
-    /*private void takePicture() {
-        if (cameraDevice == null) return;
-        final CaptureRequest.Builder captureRequestBuilder;
-        try {
-            captureRequestBuilder = cameraDevice.createCaptureRequest(CameraDevice.TEMPLATE_STILL_CAPTURE);
-            captureRequestBuilder.addTarget(imageReader.getSurface());
-            captureRequestBuilder.set(CaptureRequest.CONTROL_AF_MODE, CaptureRequest.CONTROL_AF_MODE_CONTINUOUS_PICTURE);
-            captureRequestBuilder.set(CaptureRequest.JPEG_ORIENTATION, 0);
-            CaptureRequest mCaptureRequest = captureRequestBuilder.build();
-            Log.e("game", "capture");
-            cameraCaptureSession.capture(mCaptureRequest, null, childHandler);
-        } catch (CameraAccessException e) {
-            Log.e("game", Log.getStackTraceString(e));
-        }
-    }*/
-
-    public static float Round(float Rval, int Rpl) {
-        float p = (float)Math.pow(10,Rpl);
-        Rval = Rval * p;
-        float tmp = Math.round(Rval);
-        return (float)tmp/p;
-    }
-
     public void onSensorChanged(SensorEvent sensorEvent) {
         if (captureStatus == 3 && !isShaked) {
 
@@ -367,6 +326,8 @@ public class Game extends AppCompatActivity implements ImageReader.OnImageAvaila
                 x = sensorEvent.values[0];
                 y = sensorEvent.values[1];
                 z = sensorEvent.values[2];
+
+                Log.e("sensor", x + " " + y + " " + z);
 
                 if (Math.abs(z) < 2 && ((Math.abs(x) < 2) ^ (Math.abs(y) < 2))) {
 
@@ -378,8 +339,8 @@ public class Game extends AppCompatActivity implements ImageReader.OnImageAvaila
                         handler.sendEmptyMessage(4);
                     } else if (Math.abs(y) < 1) {
                         Log.e("game", "shake");
-                        hide[Game.hide.length - Game.treasure] = null;
-                        Img_hide[Game.hide.length - Game.treasure] = null;
+                        Static.hide[Static.hide.length - Static.treasure] = null;
+                        Static.Img_hide[Static.hide.length - Static.treasure] = null;
                         handler.sendEmptyMessage(5);
                     }
                 }
@@ -402,8 +363,8 @@ public class Game extends AppCompatActivity implements ImageReader.OnImageAvaila
                     if (captureStatus == 1) {
                         captureStatus = 2;
                         Bitmap bitmap;
-                        if (isHost) {
-                            Img_hint.setImageBitmap(Game.Img_hide[Img_hide.length - treasure]);
+                        if (Static.isHost) {
+                            Img_hint.setImageBitmap(Static.Img_hide[Static.Img_hide.length - Static.treasure]);
                         } else {
                             Img_hint.setImageBitmap(capture);
                         }
@@ -411,7 +372,7 @@ public class Game extends AppCompatActivity implements ImageReader.OnImageAvaila
                         hint.setText("Nod for Accept\t\t\tShake for Cancel");
                         Img_capture.setVisibility(View.GONE);
                         captureStatus = 3;
-                        /*new Thread(new Runnable() {
+                        new Thread(new Runnable() {
                             @Override
                             public void run() {
                                 try {
@@ -422,36 +383,35 @@ public class Game extends AppCompatActivity implements ImageReader.OnImageAvaila
                                     Log.e("game",Log.getStackTraceString(e));
                                 }
                             }
-                        }).start();*/
+                        }).start();
                     }
                     break;
                 case 4:
-                    if (isHost) {
-                        final int current = Game.hide.length - Game.treasure;
+                    if (Static.isHost) {
+                        final int current = Static.hide.length - Static.treasure;
                         new Thread(new Runnable() {
                             @Override
                             public void run() {
                                 ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                                Img_hide[current].compress(Bitmap.CompressFormat.JPEG, 100, stream);
+                                Static.Img_hide[current].compress(Bitmap.CompressFormat.JPEG, 100, stream);
                                 try {
-                                    MySQL.Excute("INSERT INTO capture VALUES(?,'HIDE',?,?)", new Object[]{roomID, current, stream.toByteArray()});
-                                    Game.client.Send(Game.roomID + "HIDE;" + current + ";" + hide[current]);
-                                    if (current + 1 == Game.hide.length) {
-                                        Game.client.Send(Game.roomID + "PLAY");
+                                    MySQL.Excute("INSERT INTO capture VALUES(?,'HIDE',?,?)", new Object[]{Static.roomID, current, stream.toByteArray()});
+                                    Static.client.Send(Static.roomID + "HIDE;" + current + ";" + Static.hide[current]);
+                                    if (current + 1 == Static.hide.length) {
+                                        Static.client.Send(Static.roomID + "PLAY");
                                     }
                                 } catch (Exception e) {
                                     Log.e("game", Log.getStackTraceString(e));
                                 }
                             }
                         }).start();
-                        treasure--;
-                        if (treasure > 0) {
+                        Static.treasure--;
+                        Img_hint.setImageDrawable(getDrawable(R.drawable.wait));
+                        Img_hint.setVisibility(View.VISIBLE);
+                        Img_capture.setVisibility(View.GONE);
+                        hint.setText("Hide Success");
+                        if (Static.treasure > 0) {
                             handler.sendEmptyMessage(5);
-                        } else {
-                            Img_hint.setImageBitmap(null);
-                            Img_hint.setBackgroundColor(Color.WHITE);
-                            Img_hint.setVisibility(View.VISIBLE);
-                            Img_capture.setVisibility(View.GONE);
                         }
                     } else {
                         new Thread(new Runnable() {
@@ -461,8 +421,8 @@ public class Game extends AppCompatActivity implements ImageReader.OnImageAvaila
                                 capture.compress(Bitmap.CompressFormat.JPEG, 100, stream);
                                 try {
                                     if (captureIndex == -1) throw new Exception("Fail");
-                                    MySQL.Excute("INSERT INTO capture VALUES(?,'SEEK',?,?)", new Object[]{roomID, captureIndex, stream.toByteArray()});
-                                    Game.client.Send(Game.roomID + "SEEK;" + captureIndex + ";" + hide[captureIndex] + ";" + name);
+                                    MySQL.Excute("INSERT INTO capture VALUES(?,'SEEK',?,?)", new Object[]{Static.roomID, captureIndex, stream.toByteArray()});
+                                    Static.client.Send(Static.roomID + "SEEK;" + captureIndex + ";" + Static.hide[captureIndex] + ";" + Static.name);
                                     handler.sendEmptyMessage(5);
                                 } catch (Exception e) {
                                     if (e.getMessage().equals("Fail")) {
@@ -473,6 +433,10 @@ public class Game extends AppCompatActivity implements ImageReader.OnImageAvaila
                                 }
                             }
                         }).start();
+                        Img_hint.setImageDrawable(getDrawable(R.drawable.wait));
+                        Img_hint.setVisibility(View.VISIBLE);
+                        Img_capture.setVisibility(View.GONE);
+                        hint.setText("");
                     }
                     break;
                 case 5:
@@ -490,15 +454,14 @@ public class Game extends AppCompatActivity implements ImageReader.OnImageAvaila
                     if (now.equals("Start")) {
                         hint.setText(now);
                         //isHost = false;
-                        if (isHost) {
+                        if (Static.isHost) {
                             handler.sendEmptyMessage(9);
                         } else {
                             handler.sendEmptyMessage(5);
                         }
-                    } else if (status == 2) {
+                    } else if (Static.status == 2) {
                         hint.setText(now);
-                        Img_hint.setImageBitmap(null);
-                        Img_hint.setBackgroundColor(Color.WHITE);
+                        Img_hint.setImageDrawable(getDrawable(R.drawable.wait));
                         Img_hint.setVisibility(View.VISIBLE);
                         Img_capture.setVisibility(View.GONE);
                     }
@@ -507,10 +470,13 @@ public class Game extends AppCompatActivity implements ImageReader.OnImageAvaila
                     int current = msg.getData().getInt("SEEK", -1);
                     String who = msg.getData().getString("WHO", "");
                     Log.e("game", "SEEK" + current + ":" + who);
-                    if (who.equals(name)) {
+                    if (who.equals(Static.name)) {
                         life++;
                     }
                     hint.setText("SEEK" + current + ":" + who);
+                    if (Static.score_a + Static.score_b == Static.hide.length) {
+                        handler.sendEmptyMessage(9);
+                    }
                     break;
                 case 8:
                     life--;
@@ -520,7 +486,7 @@ public class Game extends AppCompatActivity implements ImageReader.OnImageAvaila
                         @Override
                         public void run() {
                             try {
-                                Thread.sleep(3000);
+                                Thread.sleep(1000);
                             } catch (InterruptedException e) {
                                 e.printStackTrace();
                             }
@@ -533,7 +499,7 @@ public class Game extends AppCompatActivity implements ImageReader.OnImageAvaila
                     }).start();
                     break;
                 case 9:
-                    Game.client.handler = null;
+                    Static.client.handler = null;
                     Intent intent = new Intent();
                     intent.setClass(Game.this, Room.class);
                     startActivity(intent);

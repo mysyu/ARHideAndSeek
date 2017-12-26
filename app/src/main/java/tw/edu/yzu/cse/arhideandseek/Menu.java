@@ -46,7 +46,7 @@ public class Menu extends AppCompatActivity {
             name.setError(name.getHint());
             return false;
         }
-        Game.name = n;
+        Static.name = n;
         return true;
     }
 

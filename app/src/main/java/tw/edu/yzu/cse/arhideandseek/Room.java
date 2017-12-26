@@ -30,28 +30,31 @@ public class Room extends AppCompatActivity {
         LayoutInflater inflater = getLayoutInflater();
         teamA.addHeaderView(inflater.inflate(R.layout.teama, teamA, false));
         teamB.addHeaderView(inflater.inflate(R.layout.teamb, teamB, false));
-        ((TextView) findViewById(R.id.stat)).setText("Room " + Game.roomID);
+        ((TextView) findViewById(R.id.stat)).setText("Room " + Static.roomID);
         team_a_score = (TextView) findViewById(R.id.team_a_score);
         team_b_score = (TextView) findViewById(R.id.team_b_score);
 
-        if (Game.status == 0) {
+        if (Static.status == 0) {
             initTeam();
-            Game.client.handler = handler;
             findViewById(R.id.exit).setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Game.client.Close();
+                    Static.client.Close();
                     Room.this.finish();
                 }
             });
             Button start = (Button) findViewById(R.id.start);
-            if (!Game.isHost) {
+            if (!Static.isHost) {
                 start.setVisibility(View.GONE);
             } else {
                 start.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
-                        Game.client.Send(Game.roomID + "START");
+                        if (Static.teamA.isEmpty() && Static.teamB.isEmpty()) {
+                            Toast.makeText(Room.this, "You can not start the game with no player", Toast.LENGTH_SHORT).show();
+                        } else {
+                            Static.client.Send(Static.roomID + "START");
+                        }
                     }
                 });
             }
@@ -74,7 +77,7 @@ public class Room extends AppCompatActivity {
             findViewById(R.id.exit).setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Game.client.Close();
+                    Static.client.Close();
                     Room.this.finish();
                 }
             });
@@ -84,16 +87,17 @@ public class Room extends AppCompatActivity {
             setStat();
 
         }
+        Static.client.handler = handler;
     }
 
     private void initTeam() {
-        if (!Game.teamA.isEmpty()) {
-            teamA.setAdapter(new ArrayAdapter(this, android.R.layout.simple_list_item_1, Game.teamA.split(";")));
+        if (!Static.teamA.isEmpty()) {
+            teamA.setAdapter(new ArrayAdapter(this, android.R.layout.simple_list_item_1, Static.teamA.split(";")));
         } else {
             teamA.setAdapter(new ArrayAdapter(this, android.R.layout.simple_list_item_1, new String[]{"空"}));
         }
-        if (!Game.teamB.isEmpty()) {
-            teamB.setAdapter(new ArrayAdapter(this, android.R.layout.simple_list_item_1, Game.teamB.split(";")));
+        if (!Static.teamB.isEmpty()) {
+            teamB.setAdapter(new ArrayAdapter(this, android.R.layout.simple_list_item_1, Static.teamB.split(";")));
         } else {
             teamB.setAdapter(new ArrayAdapter(this, android.R.layout.simple_list_item_1, new String[]{"空"}));
         }
@@ -103,31 +107,27 @@ public class Room extends AppCompatActivity {
 
         String[] player_score_a = null;
         String[] player_score_b = null;
-        Integer score_a = 0;
-        Integer score_b = 0;
 
-        if (!Game.teamA.isEmpty()) {
-            player_score_a = Game.teamA.split(";");
-            for (int i = 0; i < Game.team_a_score.length; i++) {
-                player_score_a[i] += ("\t\t\t找到 " + Game.team_a_score[i] + " 個");
-                score_a += Game.team_a_score[i];
+        if (!Static.teamA.isEmpty()) {
+            player_score_a = Static.teamA.split(";");
+            for (int i = 0; i < Static.team_a_score.length; i++) {
+                player_score_a[i] += ("\t\t\t找到 " + Static.team_a_score[i] + " 個");
             }
             teamA.setAdapter(new ArrayAdapter(this, android.R.layout.simple_list_item_1, player_score_a));
         } else {
             teamA.setAdapter(new ArrayAdapter(this, android.R.layout.simple_list_item_1, new String[]{"空"}));
         }
-        if (!Game.teamB.isEmpty()) {
-            player_score_a = Game.teamB.split(";");
-            for (int i = 0; i < Game.team_b_score.length; i++) {
-                player_score_a[i] += ("\t\t\t找到 " + Game.team_b_score[i] + " 個");
-                score_b += Game.team_b_score[i];
+        if (!Static.teamB.isEmpty()) {
+            player_score_a = Static.teamB.split(";");
+            for (int i = 0; i < Static.team_b_score.length; i++) {
+                player_score_a[i] += ("\t\t\t找到 " + Static.team_b_score[i] + " 個");
             }
             teamB.setAdapter(new ArrayAdapter(this, android.R.layout.simple_list_item_1, player_score_b));
         } else {
             teamB.setAdapter(new ArrayAdapter(this, android.R.layout.simple_list_item_1, new String[]{"空"}));
         }
-        team_a_score.setText(score_a + "");
-        team_b_score.setText(score_b + "");
+        team_a_score.setText(Static.score_a + "");
+        team_b_score.setText(Static.score_b + "");
     }
 
     Handler handler = new Handler() {
@@ -138,28 +138,28 @@ public class Room extends AppCompatActivity {
                     initTeam();
                     break;
                 case 2:
-                    Game.client.handler = null;
-                    Game.team_a_score = new Integer[Game.teamA.split(";").length];
-                    for (int i = 0; i < Game.team_a_score.length; i++) {
-                        Game.team_a_score[i] = 0;
+                    Static.client.handler = null;
+                    Static.team_a_score = new Integer[Static.teamA.split(";").length];
+                    for (int i = 0; i < Static.team_a_score.length; i++) {
+                        Static.team_a_score[i] = 0;
                     }
-                    Game.team_b_score = new Integer[Game.teamB.split(";").length];
-                    for (int i = 0; i < Game.team_b_score.length; i++) {
-                        Game.team_b_score[i] = 0;
+                    Static.score_a = 0;
+                    Static.team_b_score = new Integer[Static.teamB.split(";").length];
+                    for (int i = 0; i < Static.team_b_score.length; i++) {
+                        Static.team_b_score[i] = 0;
                     }
+                    Static.score_b = 0;
                     Intent intent = new Intent();
                     intent.setClass(Room.this, Game.class);
                     startActivity(intent);
                     Room.this.finish();
                     break;
                 case 7:
+                    int current = msg.getData().getInt("SEEK", -1);
+                    String who = msg.getData().getString("WHO", "");
+                    Log.e("game", "SEEK" + current + ":" + who);
+                    Toast.makeText(Room.this, "SEEK" + current + ":" + who, Toast.LENGTH_SHORT).show();
                     setStat();
-                    if (Game.status == 3) {
-                        int current = msg.getData().getInt("SEEK", -1);
-                        String who = msg.getData().getString("WHO", "");
-                        Log.e("game", "SEEK" + current + ":" + who);
-                        Toast.makeText(Room.this, "SEEK" + current + ":" + who, Toast.LENGTH_SHORT).show();
-                    }
                     break;
             }
         }

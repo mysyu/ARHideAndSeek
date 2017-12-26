@@ -30,7 +30,7 @@ public class Client extends WebSocketClient {
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
-                Game.client.connect();
+                Static.client.connect();
             }
         });
         thread.start();
@@ -45,7 +45,7 @@ public class Client extends WebSocketClient {
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
-                Game.client.send(s);
+                Static.client.send(s);
             }
         });
         thread.start();
@@ -60,13 +60,15 @@ public class Client extends WebSocketClient {
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
-                if (Game.isHost) {
-                    Game.client.Send(Game.roomID + "EXIT");
-                } else {
-                    Game.client.Send(Game.roomID + "LEAVE:" + Game.name);
+                if (Static.status == 0) {
+                    if (Static.isHost) {
+                        Static.client.send(Static.roomID + "EXIT");
+                    } else {
+                        Static.client.send(Static.roomID + "LEAVE:" + Static.name);
+                    }
                 }
-                Game.client.close();
-                Game.client = null;
+                Static.client.close();
+                Static.client = null;
             }
         });
         thread.start();
@@ -87,30 +89,30 @@ public class Client extends WebSocketClient {
     @Override
     public void onMessage(String s) {
         while (handler == null) ;
-        if (s.startsWith(Game.roomID)) {
-            s = s.replaceFirst(Game.roomID, "");
+        if (s.startsWith(Static.roomID)) {
+            s = s.replaceFirst(Static.roomID, "");
             Log.e("client", s);
             if (s.startsWith("ROOM:")) {
                 s = s.replaceFirst("ROOM:", "");
-                Log.e("client", "Time:" + Game.time + ",CardBoard:" + Game.useCardBoard + ",Treasure:" + Game.treasure + ",TeamA:" + Game.teamA + ",TeamB:" + Game.teamB + ",Status:" + Game.status);
+                Log.e("client", "Time:" + Static.time + ",CardBoard:" + Static.useCardBoard + ",Treasure:" + Static.treasure + ",TeamA:" + Static.teamA + ",TeamB:" + Static.teamB + ",Status:" + Static.status);
                 String[] ss = s.split(",");
-                Game.time = Integer.parseInt(ss[0].replaceFirst("Time:", ""));
-                Game.useCardBoard = Boolean.parseBoolean(ss[1].replaceFirst("CardBoard:", ""));
-                Game.treasure = Integer.parseInt(ss[2].replaceFirst("Treasure:", ""));
-                Game.teamA = ss[3].replaceFirst("TeamA:", "");
-                Game.teamB = ss[4].replaceFirst("TeamB:", "");
-                Game.status = Integer.parseInt(ss[5].replaceFirst("Status:", ""));
+                Static.time = Integer.parseInt(ss[0].replaceFirst("Time:", ""));
+                Static.useCardBoard = Boolean.parseBoolean(ss[1].replaceFirst("CardBoard:", ""));
+                Static.treasure = Integer.parseInt(ss[2].replaceFirst("Treasure:", ""));
+                Static.teamA = ss[3].replaceFirst("TeamA:", "");
+                Static.teamB = ss[4].replaceFirst("TeamB:", "");
+                Static.status = Integer.parseInt(ss[5].replaceFirst("Status:", ""));
                 handler.sendEmptyMessage(0);
                 Log.e("client", s);
             } else if (s.equals("START")) {
-                Game.status = 1;
+                Static.status = 1;
                 handler.sendEmptyMessage(2);
             } else if (s.startsWith("PLAY:")) {
                 s = s.replaceFirst("PLAY:", "");
                 if (s.equals("Ready")) {
-                    Game.status = 2;
+                    Static.status = 2;
                 } else if (s.equals("Start")) {
-                    Game.status = 3;
+                    Static.status = 3;
                 }
                 Bundle bundle = new Bundle();
                 bundle.putString("PLAY", s);
@@ -120,25 +122,25 @@ public class Client extends WebSocketClient {
                 handler.sendMessage(message);
                 Log.e("client", s);
             } else if (s.startsWith("HIDE")) {
-                if (!Game.isHost) {
+                if (!Static.isHost) {
                     String[] ss = s.split(";");
                     final int current = Integer.parseInt(ss[1]);
-                    Game.hide[current] = ss[2];
+                    Static.hide[current] = ss[2];
                     new Thread(new Runnable() {
                         @Override
                         public void run() {
                             try {
-                                ResultSet result = MySQL.Select("SELECT capture FROM capture WHERE ID=? AND type='HIDE' AND position=?", new Object[]{Game.roomID, current});
+                                ResultSet result = MySQL.Select("SELECT capture FROM capture WHERE ID=? AND type='HIDE' AND position=?", new Object[]{Static.roomID, current});
                                 result.next();
                                 byte[] bytes = result.getBytes("capture");
-                                Game.Img_hide[current] = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-                                if (current + 1 == Game.hide.length) {
-                                    for (int i = 0; i < Game.hide.length - 1; i++) {
-                                        if (Game.Img_hide[i] == null) {
+                                Static.Img_hide[current] = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+                                if (current + 1 == Static.hide.length) {
+                                    for (int i = 0; i < Static.hide.length - 1; i++) {
+                                        if (Static.Img_hide[i] == null) {
                                             i--;
                                         }
                                     }
-                                    Game.client.Send(Game.roomID + "PLAY");
+                                    Static.client.Send(Static.roomID + "PLAY");
                                 }
                             } catch (Exception e) {
                                 Log.e("client", Log.getStackTraceString(e));
@@ -149,20 +151,22 @@ public class Client extends WebSocketClient {
             } else if (s.startsWith("SEEK")) {
                 final String[] ss = s.split(";");
                 final int current = Integer.parseInt(ss[1]);
-                Game.seek[current] = ss[3];
-                if (Game.teamA.contains(ss[3])) {
-                    Game.team_a_score[Arrays.asList(Game.teamA.split(";")).indexOf(ss[3])]++;
-                } else if (Game.teamB.contains(ss[3])) {
-                    Game.team_b_score[Arrays.asList(Game.teamB.split(";")).indexOf(ss[3])]++;
+                Static.seek[current] = ss[3];
+                if (Static.teamA.contains(ss[3])) {
+                    Static.team_a_score[Arrays.asList(Static.teamA.split(";")).indexOf(ss[3])]++;
+                    Static.score_a++;
+                } else if (Static.teamB.contains(ss[3])) {
+                    Static.team_b_score[Arrays.asList(Static.teamB.split(";")).indexOf(ss[3])]++;
+                    Static.score_b++;
                 }
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
                         try {
-                            ResultSet result = MySQL.Select("SELECT capture FROM capture WHERE ID=? AND type='SEEK' AND position=?", new Object[]{Game.roomID, current});
+                            ResultSet result = MySQL.Select("SELECT capture FROM capture WHERE ID=? AND type='SEEK' AND position=?", new Object[]{Static.roomID, current});
                             result.next();
                             byte[] bytes = result.getBytes("capture");
-                            Game.Img_seek[current] = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+                            Static.Img_seek[current] = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
                             Bundle bundle = new Bundle();
                             bundle.putInt("SEEK", current);
                             bundle.putString("WHO", ss[3]);
@@ -176,10 +180,10 @@ public class Client extends WebSocketClient {
                     }
                 }).start();
             } else if (s.equals("FINISH")) {
-                Game.status = 4;
+                Static.status = 4;
                 handler.sendEmptyMessage(9);
             } else if (s.equals("EXIT")) {
-                Game.client.Close();
+                Static.client.Close();
                 handler.sendEmptyMessage(-1);
             }
         }

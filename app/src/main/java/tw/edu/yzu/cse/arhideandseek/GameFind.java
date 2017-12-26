@@ -27,20 +27,22 @@ public class GameFind extends AppCompatActivity {
                 try {
                     if (validateRoomID()) {
                         MySQL.Connect();
-                        Game.name += "-" + MySQL.IP;
-                        Log.e("Name", Game.name);
-                        ResultSet result = MySQL.Select("SELECT host FROM game WHERE ID=? LIMIT 1", new Object[]{Game.roomID});
+                        if (!Static.name.contains("-")) {
+                            Static.name += "-" + MySQL.IP;
+                        }
+                        Log.e("Name", Static.name);
+                        ResultSet result = MySQL.Select("SELECT host FROM game WHERE ID=? LIMIT 1", new Object[]{Static.roomID});
                         if (!result.next())
-                            throw new Exception("Can not find the room ID = " + Game.roomID);
-                        Game.host = result.getString("host");
-                        Game.isHost = false;
-                        Game.client = new Client();
-                        Game.client.handler = handler;
-                        Game.client.Start();
+                            throw new Exception("Can not find the room ID = " + Static.roomID);
+                        Static.host = result.getString("host");
+                        Static.isHost = false;
+                        Static.client = new Client();
+                        Static.client.handler = handler;
+                        Static.client.Start();
                     }
                 } catch (Exception e) {
                     Log.e("err", Log.getStackTraceString(e));
-                    if (e.getMessage().equals("Can not find the room ID = " + Game.roomID))
+                    if (e.getMessage().equals("Can not find the room ID = " + Static.roomID))
                         Toast.makeText(GameFind.this, e.getMessage(), Toast.LENGTH_SHORT).show();
                     else
                         Toast.makeText(GameFind.this, "Can not connect to Server. Please check the network and try again later.", Toast.LENGTH_SHORT).show();
@@ -56,7 +58,7 @@ public class GameFind extends AppCompatActivity {
             roomID.setError(roomID.getHint());
             return false;
         }
-        Game.roomID = r;
+        Static.roomID = r;
         return true;
     }
 
@@ -65,21 +67,26 @@ public class GameFind extends AppCompatActivity {
         public void handleMessage(Message msg) {
             switch (msg.what) {
                 case 0:
-                    if (Game.status == 0) {
-                        Game.client.handler = null;
-                        Intent intent = new Intent();
-                        intent.setClass(GameFind.this, Room.class);
-                        startActivity(intent);
-                        GameFind.this.finish();
-                        break;
+                    if (Static.status == 0) {
+                        if (Static.teamA.contains(Static.name) || Static.teamB.contains(Static.name)) {
+                            Static.client.handler = null;
+                            Intent intent = new Intent();
+                            intent.setClass(GameFind.this, Room.class);
+                            startActivity(intent);
+                            GameFind.this.finish();
+                            break;
+                        } else {
+                            Toast.makeText(GameFind.this, "You can not enter this room.", Toast.LENGTH_SHORT).show();
+                            Static.status = -1;
+                            Static.client.Close();
+                        }
                     } else {
                         Toast.makeText(GameFind.this, "The Room has started the Game. Please wait for next Game.", Toast.LENGTH_SHORT).show();
-                        Game.client.close();
-                        Game.client = null;
+                        Static.client.Close();
                     }
                     break;
                 case 1:
-                    Game.client.Send(Game.roomID + "PLAYER:" + Game.name);
+                    Static.client.Send(Static.roomID + "PLAYER:" + Static.name);
                     break;
             }
         }

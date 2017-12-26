@@ -29,26 +29,26 @@ public class Stat extends AppCompatActivity {
         findViewById(R.id.last).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                current = (current - 1 + Game.hide.length) % Game.hide.length;
+                current = (current - 1 + Static.hide.length) % Static.hide.length;
                 setStat();
             }
         });
         findViewById(R.id.next).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                current = (current + 1 + Game.hide.length) % Game.hide.length;
+                current = (current + 1 + Static.hide.length) % Static.hide.length;
                 setStat();
             }
         });
         findViewById(R.id.detail).setOnClickListener(new View.OnClickListener() {
             @Override
-               public void onClick(View v) {
-                Game.client.handler = null;
+            public void onClick(View v) {
+                Static.client.handler = null;
                 Intent intent = new Intent();
                 intent.setClass(Stat.this, Room.class);
                 startActivity(intent);
                 Stat.this.finish();
-               }
+            }
         });
         Img_hide = (ImageView) findViewById(R.id.hide);
         Img_seek = (ImageView) findViewById(R.id.seek);
@@ -59,34 +59,22 @@ public class Stat extends AppCompatActivity {
 
         current = 0;
         setStat();
-        Game.client.handler = handler;
+        Static.client.handler = handler;
     }
 
     private void setStat() {
-        Integer score_a = 0;
-        Integer score_b = 0;
 
-        if (!Game.teamA.isEmpty()) {
-            for (int i = 0; i < Game.team_a_score.length; i++) {
-                score_a += Game.team_a_score[i];
-            }
-        }
-        if (!Game.teamB.isEmpty()) {
-            for (int i = 0; i < Game.team_b_score.length; i++) {
-                score_b += Game.team_b_score[i];
-            }
-        }
-        stat.setText(String.format("TeamA  %02d  :  %02d   TeamB", score_a, score_b));
+        stat.setText(String.format("TeamA  %02d  :  %02d   TeamB", Static.score_a, Static.score_b));
         position.setText("Position" + current);
-        if (Game.seek[current] == null) {
+        if (Static.seek[current] == null) {
             player.setText("");
             found.setText("Not Found");
         } else {
-            player.setText("Player: " + Game.seek[current]);
+            player.setText("Player: " + Static.seek[current]);
             found.setText("Found");
         }
-        Img_hide.setImageBitmap(Game.Img_hide[current]);
-        Img_seek.setImageBitmap(Game.Img_seek[current]);
+        Img_hide.setImageBitmap(Static.Img_hide[current]);
+        Img_seek.setImageBitmap(Static.Img_seek[current]);
     }
 
     Handler handler = new Handler() {
@@ -97,13 +85,11 @@ public class Stat extends AppCompatActivity {
                     Log.e("stat", msg.getData().getString("PLAY", ""));
                     break;
                 case 7:
+                    int current = msg.getData().getInt("SEEK", -1);
+                    String who = msg.getData().getString("WHO", "");
+                    Log.e("game", "SEEK" + current + ":" + who);
+                    Toast.makeText(Stat.this, "SEEK" + current + ":" + who, Toast.LENGTH_SHORT).show();
                     setStat();
-                    if (Game.status == 3) {
-                        int current = msg.getData().getInt("SEEK", -1);
-                        String who = msg.getData().getString("WHO", "");
-                        Log.e("game", "SEEK" + current + ":" + who);
-                        Toast.makeText(Stat.this, "SEEK" + current + ":" + who, Toast.LENGTH_SHORT).show();
-                    }
                     break;
             }
         }

@@ -19,7 +19,8 @@
         android:id="@+id/hint"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:srcCompat="@android:color/transparent" />
+        android:scaleType="fitXY"
+        app:srcCompat="@drawable/wait" />
 
     <TextView
         android:id="@+id/hint_text"
