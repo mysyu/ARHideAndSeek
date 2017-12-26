@@ -7,9 +7,9 @@
     </string-array>
     <string-array name="mode_select">
         <item>一般</item>
-        <item>CardBoard</item>
     </string-array>
     <string-array name="treasure_select">
+        <item>3個</item>
         <item>5個</item>
         <item>10個</item>
     </string-array>

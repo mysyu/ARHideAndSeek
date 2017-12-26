@@ -158,7 +158,7 @@ public class Room extends AppCompatActivity {
                     int current = msg.getData().getInt("SEEK", -1);
                     String who = msg.getData().getString("WHO", "");
                     Log.e("game", "SEEK" + current + ":" + who);
-                    Toast.makeText(Room.this, "SEEK" + current + ":" + who, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(Room.this, who + " find 1 treasure", Toast.LENGTH_SHORT).show();
                     setStat();
                     break;
             }

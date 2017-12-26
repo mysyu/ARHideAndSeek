@@ -37,6 +37,7 @@ import android.view.SurfaceView;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
@@ -277,7 +278,7 @@ public class Game extends AppCompatActivity implements ImageReader.OnImageAvaila
                     canvas.drawText(recognition.getTitle(), location.left + 50, location.top + 100, paint);
                     if (lastFind.equals(recognition.getTitle())) {
                         lastFindCount++;
-                        if (lastFindCount == 10) {
+                        if (lastFindCount == 5) {
                             captureStatus = 1;
                             paint.setColor(Color.BLUE);
                             paint.setStyle(Paint.Style.STROKE);
@@ -339,8 +340,10 @@ public class Game extends AppCompatActivity implements ImageReader.OnImageAvaila
                         handler.sendEmptyMessage(4);
                     } else if (Math.abs(y) < 1) {
                         Log.e("game", "shake");
-                        Static.hide[Static.hide.length - Static.treasure] = null;
-                        Static.Img_hide[Static.hide.length - Static.treasure] = null;
+                        if (Static.isHost) {
+                            Static.hide[Static.hide.length - Static.treasure] = null;
+                            Static.Img_hide[Static.hide.length - Static.treasure] = null;
+                        }
                         handler.sendEmptyMessage(5);
                     }
                 }
@@ -372,7 +375,7 @@ public class Game extends AppCompatActivity implements ImageReader.OnImageAvaila
                         hint.setText("Nod for Accept\t\t\tShake for Cancel");
                         Img_capture.setVisibility(View.GONE);
                         captureStatus = 3;
-                        new Thread(new Runnable() {
+                        /*new Thread(new Runnable() {
                             @Override
                             public void run() {
                                 try {
@@ -383,7 +386,7 @@ public class Game extends AppCompatActivity implements ImageReader.OnImageAvaila
                                     Log.e("game",Log.getStackTraceString(e));
                                 }
                             }
-                        }).start();
+                        }).start();*/
                     }
                     break;
                 case 4:
@@ -409,7 +412,8 @@ public class Game extends AppCompatActivity implements ImageReader.OnImageAvaila
                         Img_hint.setImageDrawable(getDrawable(R.drawable.wait));
                         Img_hint.setVisibility(View.VISIBLE);
                         Img_capture.setVisibility(View.GONE);
-                        hint.setText("Hide Success");
+                        hint.setText("");
+                        Toast.makeText(Game.this, "Hide Success. " + Static.treasure + " left.", Toast.LENGTH_SHORT).show();
                         if (Static.treasure > 0) {
                             handler.sendEmptyMessage(5);
                         }
@@ -423,7 +427,6 @@ public class Game extends AppCompatActivity implements ImageReader.OnImageAvaila
                                     if (captureIndex == -1) throw new Exception("Fail");
                                     MySQL.Excute("INSERT INTO capture VALUES(?,'SEEK',?,?)", new Object[]{Static.roomID, captureIndex, stream.toByteArray()});
                                     Static.client.Send(Static.roomID + "SEEK;" + captureIndex + ";" + Static.hide[captureIndex] + ";" + Static.name);
-                                    handler.sendEmptyMessage(5);
                                 } catch (Exception e) {
                                     if (e.getMessage().equals("Fail")) {
                                         handler.sendEmptyMessage(8);
@@ -470,35 +473,28 @@ public class Game extends AppCompatActivity implements ImageReader.OnImageAvaila
                     int current = msg.getData().getInt("SEEK", -1);
                     String who = msg.getData().getString("WHO", "");
                     Log.e("game", "SEEK" + current + ":" + who);
+                    Toast.makeText(Game.this, who + " find 1 treasure", Toast.LENGTH_SHORT).show();
                     if (who.equals(Static.name)) {
-                        life++;
+                        handler.sendEmptyMessage(5);
                     }
-                    hint.setText("SEEK" + current + ":" + who);
                     if (Static.score_a + Static.score_b == Static.hide.length) {
                         handler.sendEmptyMessage(9);
                     }
                     break;
                 case 8:
                     life--;
-                    hint.setText("Fail! Life: " + life);
+                    Toast.makeText(Game.this, "Fail! Life: " + life, Toast.LENGTH_SHORT).show();
                     Log.e("game", "Fail! Life: " + life);
-                    new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
-                                Thread.sleep(1000);
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-                            if (life == 0) {
-                                handler.sendEmptyMessage(9);
-                            } else {
-                                handler.sendEmptyMessage(5);
-                            }
-                        }
-                    }).start();
+                    if (life != 0) {
+                        handler.sendEmptyMessage(5);
+                    } else {
+                        handler.sendEmptyMessage(9);
+                    }
                     break;
                 case 9:
+                    if (!Static.isHost) {
+                        Toast.makeText(Game.this, "Game End", Toast.LENGTH_SHORT).show();
+                    }
                     Static.client.handler = null;
                     Intent intent = new Intent();
                     intent.setClass(Game.this, Room.class);

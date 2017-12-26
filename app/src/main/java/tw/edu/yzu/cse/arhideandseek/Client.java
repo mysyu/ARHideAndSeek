@@ -159,6 +159,13 @@ public class Client extends WebSocketClient {
                     Static.team_b_score[Arrays.asList(Static.teamB.split(";")).indexOf(ss[3])]++;
                     Static.score_b++;
                 }
+                Bundle bundle = new Bundle();
+                bundle.putInt("SEEK", current);
+                bundle.putString("WHO", ss[3]);
+                Message message = new Message();
+                message.what = 7;
+                message.setData(bundle);
+                handler.sendMessage(message);
                 new Thread(new Runnable() {
                     @Override
                     public void run() {
@@ -167,13 +174,7 @@ public class Client extends WebSocketClient {
                             result.next();
                             byte[] bytes = result.getBytes("capture");
                             Static.Img_seek[current] = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-                            Bundle bundle = new Bundle();
-                            bundle.putInt("SEEK", current);
-                            bundle.putString("WHO", ss[3]);
-                            Message message = new Message();
-                            message.what = 7;
-                            message.setData(bundle);
-                            handler.sendMessage(message);
+                            handler.sendEmptyMessage(10);
                         } catch (Exception e) {
                             Log.e("client", Log.getStackTraceString(e));
                         }

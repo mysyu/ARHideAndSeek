@@ -38,7 +38,7 @@ public class GameCreate extends AppCompatActivity {
                         Static.isHost = true;
                         Static.time = (((Spinner) findViewById(R.id.time)).getSelectedItemPosition() + 1) * 5 * 60;
                         Static.useCardBoard = (((Spinner) findViewById(R.id.mode)).getSelectedItemPosition()) == 1;
-                        Static.treasure = 1;//(((Spinner) findViewById(R.id.time)).getSelectedItemPosition() + 1) * 5;
+                        Static.treasure = Integer.parseInt(((Spinner) findViewById(R.id.treasure)).getSelectedItem().toString().replace("個", ""));
                         Static.teamA = "";
                         Static.teamB = "";
                         Static.status = 0;

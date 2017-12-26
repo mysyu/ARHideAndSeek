@@ -88,7 +88,10 @@ public class Stat extends AppCompatActivity {
                     int current = msg.getData().getInt("SEEK", -1);
                     String who = msg.getData().getString("WHO", "");
                     Log.e("game", "SEEK" + current + ":" + who);
-                    Toast.makeText(Stat.this, "SEEK" + current + ":" + who, Toast.LENGTH_SHORT).show();
+                    Toast.makeText(Stat.this, who + " find 1 treasure", Toast.LENGTH_SHORT).show();
+                    setStat();
+                    break;
+                case 10:
                     setStat();
                     break;
             }
