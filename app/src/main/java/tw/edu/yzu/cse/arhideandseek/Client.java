@@ -23,7 +23,7 @@ public class Client extends WebSocketClient {
     public Handler handler = null;
 
     public Client() {
-        super(URI.create("ws://1.34.30.96:666/"), new Draft_6455());
+        super(URI.create("ws://mysyu.ddns.net:666/"), new Draft_6455());
     }
 
     public void Start() {
