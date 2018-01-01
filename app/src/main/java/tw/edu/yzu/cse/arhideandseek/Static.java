@@ -9,7 +9,6 @@ import android.graphics.Bitmap;
 public class Static {
     public static String name = null;
     public static String roomID = null;
-    public static String host = null;
     public static Boolean isHost = null;
     public static Integer time = null;
     public static Boolean useCardBoard = null;

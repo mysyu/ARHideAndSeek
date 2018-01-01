@@ -118,9 +118,9 @@ public class Room extends AppCompatActivity {
             teamA.setAdapter(new ArrayAdapter(this, android.R.layout.simple_list_item_1, new String[]{"空"}));
         }
         if (!Static.teamB.isEmpty()) {
-            player_score_a = Static.teamB.split(";");
+            player_score_b = Static.teamB.split(";");
             for (int i = 0; i < Static.team_b_score.length; i++) {
-                player_score_a[i] += ("\t\t\t找到 " + Static.team_b_score[i] + " 個");
+                player_score_b[i] += ("\t\t\t找到 " + Static.team_b_score[i] + " 個");
             }
             teamB.setAdapter(new ArrayAdapter(this, android.R.layout.simple_list_item_1, player_score_b));
         } else {
@@ -160,6 +160,12 @@ public class Room extends AppCompatActivity {
                     Log.e("game", "SEEK" + current + ":" + who);
                     Toast.makeText(Room.this, who + " find 1 treasure", Toast.LENGTH_SHORT).show();
                     setStat();
+                    break;
+                case -4:
+                    Toast.makeText(Room.this, "Room has been close!", Toast.LENGTH_SHORT).show();
+                    Static.status = -1;
+                    Static.client.Close();
+                    Room.this.finish();
                     break;
             }
         }

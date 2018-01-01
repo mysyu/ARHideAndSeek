@@ -319,8 +319,8 @@ public class Game extends AppCompatActivity implements ImageReader.OnImageAvaila
     }
 
     public void onSensorChanged(SensorEvent sensorEvent) {
+        Log.e("sensor", captureStatus + " " + isShaked);
         if (captureStatus == 3 && !isShaked) {
-
             if (sensorEvent.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
                 long curTime = System.currentTimeMillis();
 
@@ -335,10 +335,10 @@ public class Game extends AppCompatActivity implements ImageReader.OnImageAvaila
                     Log.e("game", x + " " + y + " " + z);
                     isShaked = true;
 
-                    if (Math.abs(x) < 1) {
+                    if (Math.abs(x) < 2) {
                         Log.e("game", "nod");
                         handler.sendEmptyMessage(4);
-                    } else if (Math.abs(y) < 1) {
+                    } else if (Math.abs(y) < 2) {
                         Log.e("game", "shake");
                         if (Static.isHost) {
                             Static.hide[Static.hide.length - Static.treasure] = null;

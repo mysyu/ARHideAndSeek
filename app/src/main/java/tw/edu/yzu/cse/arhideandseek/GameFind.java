@@ -10,8 +10,6 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import java.sql.ResultSet;
-
 public class GameFind extends AppCompatActivity {
     private EditText roomID = null;
 
@@ -30,11 +28,6 @@ public class GameFind extends AppCompatActivity {
                         if (!Static.name.contains("-")) {
                             Static.name += "-" + MySQL.IP;
                         }
-                        Log.e("Name", Static.name);
-                        ResultSet result = MySQL.Select("SELECT host FROM game WHERE ID=? LIMIT 1", new Object[]{Static.roomID});
-                        if (!result.next())
-                            throw new Exception("Can not find the room ID = " + Static.roomID);
-                        Static.host = result.getString("host");
                         Static.isHost = false;
                         Static.client = new Client();
                         Static.client.handler = handler;
@@ -42,10 +35,7 @@ public class GameFind extends AppCompatActivity {
                     }
                 } catch (Exception e) {
                     Log.e("err", Log.getStackTraceString(e));
-                    if (e.getMessage().equals("Can not find the room ID = " + Static.roomID))
-                        Toast.makeText(GameFind.this, e.getMessage(), Toast.LENGTH_SHORT).show();
-                    else
-                        Toast.makeText(GameFind.this, "Can not connect to Server. Please check the network and try again later.", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(GameFind.this, "Can not connect to Server. Please check the network and try again later.", Toast.LENGTH_SHORT).show();
                 }
             }
         });
@@ -88,6 +78,12 @@ public class GameFind extends AppCompatActivity {
                 case 1:
                     Static.client.Send(Static.roomID + "PLAYER:" + Static.name);
                     break;
+                case -3:
+                    Toast.makeText(GameFind.this, "Can not find the room ID = " + Static.roomID, Toast.LENGTH_SHORT).show();
+                    Static.status = -1;
+                    Static.client.Close();
+                    break;
+
             }
         }
     };

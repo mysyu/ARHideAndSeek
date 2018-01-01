@@ -45,6 +45,7 @@ public class Client extends WebSocketClient {
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
+                while (!Static.client.isOpen()) ;
                 Static.client.send(s);
             }
         });
@@ -66,9 +67,10 @@ public class Client extends WebSocketClient {
                     } else {
                         Static.client.send(Static.roomID + "LEAVE:" + Static.name);
                     }
+                } else {
+                    Static.client.close();
+                    Static.client = null;
                 }
-                Static.client.close();
-                Static.client = null;
             }
         });
         thread.start();
@@ -104,6 +106,8 @@ public class Client extends WebSocketClient {
                 Static.status = Integer.parseInt(ss[5].replaceFirst("Status:", ""));
                 handler.sendEmptyMessage(0);
                 Log.e("client", s);
+            } else if (s.equals("NOTFIND")) {
+                handler.sendEmptyMessage(-3);
             } else if (s.equals("START")) {
                 Static.status = 1;
                 handler.sendEmptyMessage(2);
@@ -184,8 +188,8 @@ public class Client extends WebSocketClient {
                 Static.status = 4;
                 handler.sendEmptyMessage(9);
             } else if (s.equals("EXIT")) {
-                Static.client.Close();
-                handler.sendEmptyMessage(-1);
+                Static.status = -1;
+                handler.sendEmptyMessage(-4);
             }
         }
     }

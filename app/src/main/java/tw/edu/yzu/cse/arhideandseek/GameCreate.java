@@ -11,6 +11,9 @@ import android.widget.Spinner;
 import android.widget.Toast;
 
 import java.sql.ResultSet;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 
 public class GameCreate extends AppCompatActivity {
 
@@ -28,13 +31,13 @@ public class GameCreate extends AppCompatActivity {
                         Static.name += "-" + MySQL.IP;
                     }
                     Log.e("Name", Static.name);
-                    MySQL.Excute("DELETE FROM capture WHERE ID IN ( SELECT ID FROM game WHERE host like ?)", new Object[]{"%" + MySQL.IP + "%"});
-                    MySQL.Excute("DELETE FROM game WHERE host like ?", new Object[]{"%" + MySQL.IP + "%"});
-                    if (MySQL.Excute("INSERT INTO game VALUES(GenerateRoomID(),?)", new Object[]{Static.name}) == 1) {
-                        ResultSet result = MySQL.Select("SELECT ID FROM game WHERE host=? LIMIT 1", new Object[]{Static.name});
+                    DateFormat df = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+                    String date = df.format(Calendar.getInstance().getTime());
+                    Log.e("create", date);
+                    if (MySQL.Excute("INSERT INTO game VALUES(GenerateRoomID(),?,?)", new Object[]{Static.name, date}) == 1) {
+                        ResultSet result = MySQL.Select("SELECT ID FROM game WHERE host=? AND createtime=? LIMIT 1", new Object[]{Static.name, date});
                         result.next();
                         Static.roomID = result.getString("ID");
-                        Static.host = Static.name;
                         Static.isHost = true;
                         Static.time = (((Spinner) findViewById(R.id.time)).getSelectedItemPosition() + 1) * 5 * 60;
                         Static.useCardBoard = (((Spinner) findViewById(R.id.mode)).getSelectedItemPosition()) == 1;
